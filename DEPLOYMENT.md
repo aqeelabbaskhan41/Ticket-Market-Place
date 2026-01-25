@@ -19,23 +19,29 @@ Install PM2 globally:
 npm install pm2 -g
 ```
 
-## 2. Cloning the Repository
+## 2. Cloning/Updating the Repository
+If you haven't cloned yet:
 ```bash
 git clone https://github.com/aqeelabbaskhan41/Ticket-Market-Place.git
 cd Ticket-Market-Place
 ```
+If you already cloned, pull the latest changes (after pushing from local):
+```bash
+git pull origin main
+```
 
 ## 3. Backend Deployment
 ```bash
-cd BackEnd
-npm install
-pm2 start ../ecosystem.config.js --env production
+# Run from the project root!
+npm install --prefix BackEnd
+pm2 start ecosystem.config.js --env production
 pm2 save
 ```
 
 ## 4. Frontend Deployment
 ```bash
-cd ../frontend
+# Run from the project root or frontend folder
+cd frontend
 npm install
 npm run build
 pm2 start npm --name "ticket-marketplace-frontend" -- start

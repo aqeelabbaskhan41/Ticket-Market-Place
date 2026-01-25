@@ -1,9 +1,11 @@
+const path = require('path');
+
 module.exports = {
   apps: [
     {
       name: 'ticket-marketplace-backend',
       script: 'server.js',
-      cwd: './BackEnd',
+      cwd: path.resolve(__dirname, 'BackEnd'),
       instances: 'max',
       exec_mode: 'cluster',
       env_production: {
