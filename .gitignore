@@ -1,0 +1,48 @@
+# Node.js
+node_modules
+/BackEnd/error.log
+/BackEnd/startup_log.txt
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js build output
+.next/
+out/
+
+# Next.js cache
+.next/cache/
+
+# Next.js temporary files
+.next/static/development/_ssgManifest.js
+.next/static/development/_buildManifest.js
+
+# Next.js IDE and config files
+.next/
+*.js.map
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Uploaded files (already handled by backend to store in /BackEnd/uploads)
+# It's important NOT to commit uploaded user files to git
+/BackEnd/uploads/
