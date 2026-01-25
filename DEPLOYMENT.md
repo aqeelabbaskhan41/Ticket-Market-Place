@@ -52,6 +52,30 @@ pm2 save
 Your file storage path is configured as `BackEnd/uploads`. With 100GB storage, this will handle thousands of ticket and match images.
 
 ## 6. Nginx Configuration
-Setup Nginx as a reverse proxy to point your domains to the respective ports:
-- `api.tixtradershub.com` -> `http://localhost:5000`
-- `tixtradershub.com` -> `http://localhost:3000`
+Setup Nginx to point your domain to the respective ports:
+```nginx
+server {
+    listen 80;
+    server_name tixtradershub.com www.tixtradershub.com;
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+```
