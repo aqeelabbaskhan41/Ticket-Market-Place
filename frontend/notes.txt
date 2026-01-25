@@ -1,0 +1,1 @@
+mongodb+srv://tixtradershub_db_user:1JKu0ZkliDwREkn2@ticketmarket.zjs6hto.mongodb.net/?appName=TicketMarket
