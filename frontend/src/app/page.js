@@ -541,7 +541,7 @@ export default function Home() {
             </div>
 
             <div className="text-blue-300 text-sm backdrop-blur-sm bg-white/5 rounded-lg px-4 py-2 border border-white/10">
-              © 2025 TicketHub. All rights reserved.
+              © 2026 TicketHub. All rights reserved.
             </div>
           </div>
         </footer>
