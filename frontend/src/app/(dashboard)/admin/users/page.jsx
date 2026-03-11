@@ -396,12 +396,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                     <div className="flex items-center">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full flex items-center justify-center mr-3 shadow-lg">
                         <span className="text-white font-bold text-xs sm:text-sm">
-                          {user.profile?.name?.[0]?.toUpperCase() || "U"}
+                          {user.profile?.fullName?.[0]?.toUpperCase() || "U"}
                         </span>
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-0">
                         <div className="text-sm font-medium text-white truncate max-w-[120px] sm:max-w-[200px]">
-                          {user.profile?.name || "No Name"}
+                          {user.profile?.fullName || "No Name"}
                         </div>
                         <div className="text-sm text-blue-200 truncate max-w-[120px] sm:max-w-[200px]">
                           {user.email}

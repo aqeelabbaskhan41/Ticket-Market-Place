@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'ticket-backend',
-      script: './BackEnd/server.js',
-      cwd: '.',
+      script: './server.js',
+      cwd: './BackEnd',
       watch: false,
       env: {
         NODE_ENV: 'production',

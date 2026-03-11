@@ -35,33 +35,39 @@ export default function DashboardLayout({ children }) {
   // Show loading state while initializing
   if (!isInitialized) {
     return (
-      <div className="flex h-screen bg-cover bg-center bg-fixed bg-no-repeat" style={{ 
-        backgroundImage: "url('Z')" 
-      }}>
-        <div className="flex h-screen bg-gray-900/50 w-full items-center justify-center">
-          <div className="text-white text-lg">Loading...</div>
-        </div>
+      <div className="flex h-screen bg-gray-900 items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+        <span className="ml-3 text-white text-lg">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-cover bg-center bg-fixed bg-no-repeat" style={{ 
-      backgroundImage: "url('Z')" 
-    }}>
-      <div className="flex h-screen bg-gray-900/50 w-full">
-        {/* Sidebar */}
-        <DashboardSidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-        />
+    <div className="flex h-screen bg-gray-900 overflow-hidden">
+      <div className="flex h-screen bg-gray-900/50 w-full relative">
+        {/* Background Image Overlay */}
+        <div 
+          className="absolute inset-0 z-0 opacity-20 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: "url('https://images.pexels.com/photos/31160152/pexels-photo-31160152/free-photo-of-vibrant-football-match-at-night-stadium.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')" 
+          }}
+        ></div>
         
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <DashboardHeader onToggleSidebar={() => setSidebarOpen(true)} />
-          <main className="flex-1 overflow-auto p-4">
-            {children}
-          </main>
+        {/* Main Content (Relative to be above background) */}
+        <div className="flex w-full relative z-10">
+          {/* Sidebar */}
+          <DashboardSidebar 
+            isOpen={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)} 
+          />
+          
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <DashboardHeader onToggleSidebar={() => setSidebarOpen(true)} />
+            <main className="flex-1 overflow-auto p-4 relative">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </div>

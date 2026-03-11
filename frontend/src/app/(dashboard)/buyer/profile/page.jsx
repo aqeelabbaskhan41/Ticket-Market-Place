@@ -7,8 +7,7 @@ const BuyerProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     phone: '',
     email: ''
   });
@@ -33,8 +32,7 @@ const BuyerProfilePage = () => {
         const data = await response.json();
         setUser(data.user);
         setFormData({
-          firstName: data.user.profile?.firstName || '',
-          lastName: data.user.profile?.lastName || '',
+          fullName: data.user.profile?.fullName || '',
           phone: data.user.profile?.phone || '',
           email: data.user.email || ''
         });
@@ -76,12 +74,7 @@ const BuyerProfilePage = () => {
     }
   };
 
-  const getFullName = () => {
-    if (user?.profile?.firstName && user?.profile?.lastName) {
-      return `${user.profile.firstName} ${user.profile.lastName}`;
-    }
-    return user?.profile?.firstName || user?.profile?.lastName || 'User Profile';
-  };
+
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -196,42 +189,22 @@ const BuyerProfilePage = () => {
             )}
           </div>
 
-          {/* First Name Field */}
+          {/* Full Name Field */}
           <div>
             <label className="block text-blue-200 text-sm font-medium mb-2">
-              First Name
+              Full Name
             </label>
             {editMode ? (
               <input
                 type="text"
-                value={formData.firstName}
-                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="Enter first name"
+                placeholder="Enter full name"
               />
             ) : (
               <div className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
-                {user.profile?.firstName || 'Not set'}
-              </div>
-            )}
-          </div>
-
-          {/* Last Name Field */}
-          <div>
-            <label className="block text-blue-200 text-sm font-medium mb-2">
-              Last Name
-            </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="Enter last name"
-              />
-            ) : (
-              <div className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
-                {user.profile?.lastName || 'Not set'}
+                {user.profile?.fullName || 'Not set'}
               </div>
             )}
           </div>
@@ -255,16 +228,6 @@ const BuyerProfilePage = () => {
                 {user.profile?.phone || 'Not set'}
               </div>
             )}
-          </div>
-
-          {/* Full Name Display (Read-only) */}
-          <div>
-            <label className="block text-blue-200 text-sm font-medium mb-2">
-              Full Name
-            </label>
-            <div className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
-              {getFullName()}
-            </div>
           </div>
 
           {/* Member Since */}

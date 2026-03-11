@@ -382,7 +382,7 @@ exports.getUsersWithLevels = async (req, res) => {
     const users = await User.find({ 
       role: { $ne: 'admin' } // Exclude admins
     })
-      .select('email profile.name level points createdAt customCommissionRate isCustomCommission role')
+      .select('email profile level points createdAt customCommissionRate isCustomCommission role')
       .sort({ createdAt: -1 });
 
     const settings = await CommissionSettings.getSettings();

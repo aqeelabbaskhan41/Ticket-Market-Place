@@ -64,7 +64,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     fetchUsers();
   }, []);
 
-  const handleApprove = async (userId, userName) => {
+  const handleApprove = async (userId, userFullName) => {
     const token = localStorage.getItem('token');
     if (!token) {
       setError('Please login first');
@@ -94,7 +94,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       if (data.success) {
         // Remove the approved user from the list
         setPendingUsers(pendingUsers.filter(user => user._id !== userId));
-        setSuccess(`Successfully approved ${userName || 'seller'}`);
+        setSuccess(`Successfully approved ${userFullName || 'seller'}`);
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccess(''), 3000);
@@ -208,7 +208,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg sm:text-xl font-semibold text-white truncate">
-                        {user.profile?.name || 'Unknown User'}
+                        {user.profile?.fullName || 'Unknown User'}
                       </h3>
                       
                       <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2">
@@ -238,7 +238,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                   {/* Approve Button */}
                   <div className="flex-shrink-0">
                     <button 
-                      onClick={() => handleApprove(user._id, user.profile?.name)}
+                      onClick={() => handleApprove(user._id, user.profile?.fullName)}
                       disabled={actionLoading}
                       className="w-full lg:w-auto bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-green-400 disabled:to-green-500 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >

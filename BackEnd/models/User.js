@@ -28,8 +28,7 @@ const userSchema = new mongoose.Schema({
 
   // Profile information (shared across roles)
   profile: {
-    firstName: String,
-    lastName: String,
+    fullName: { type: String, required: true },
     phone: String,
     address: String
   },

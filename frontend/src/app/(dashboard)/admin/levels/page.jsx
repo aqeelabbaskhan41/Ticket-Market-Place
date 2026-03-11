@@ -112,7 +112,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (searchTerm) {
       filtered = filtered.filter(user => 
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.profile?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        user.profile?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -496,7 +496,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-semibold text-white text-sm truncate">
-                      {user.profile?.name || 'No Name'}
+                      {user.profile?.fullName || 'No Name'}
                     </h3>
                     <p className="text-gray-400 text-xs truncate">{user.email}</p>
                   </div>
@@ -694,7 +694,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                       <td className="px-4 py-3">
                         <div>
                           <div className="font-medium text-white text-xs">
-                            {user.profile?.name || 'No Name'}
+                            {user.profile?.fullName || 'No Name'}
                           </div>
                           <div className="text-gray-400 text-xs">{user.email}</div>
                         </div>
@@ -782,7 +782,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
               <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 max-w-sm w-full">
                 <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                   <FaLevelUpAlt className="text-blue-400" />
-                  Change Level for {editingUser.profile?.name}
+                  Change Level for {editingUser.profile?.fullName}
                 </h3>
                 <select
                   value={newLevel}
@@ -817,7 +817,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
               <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 max-w-sm w-full">
                 <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                   <FaChartLine className="text-yellow-400" />
-                  Set Commission for {editingCommission.profile?.name}
+                  Set Commission for {editingCommission.profile?.fullName}
                 </h3>
                 <input
                   type="number"

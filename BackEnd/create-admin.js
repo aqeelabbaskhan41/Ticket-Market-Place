@@ -24,8 +24,7 @@ const createAdmin = async () => {
       status: "approved",
       activeRole: "buyer", // Required field - set to 'buyer' since admin can't switch roles
       profile: {
-        firstName: "Super",
-        lastName: "Admin",
+        fullName: "Super Admin",
         phone: "+1234567890",
       },
     });

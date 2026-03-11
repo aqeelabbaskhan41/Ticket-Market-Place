@@ -61,7 +61,7 @@ exports.getTicketListingsByMatch = async (req, res) => {
       status: 'active',
       quantity: { $gt: 0 }
     })
-      .populate("seller", "name email")
+      .populate("seller", "profile.fullName email")
       .select('+sectionImage'); // Include sectionImage in response
 
     res.json(listings);
@@ -74,7 +74,7 @@ exports.getTicketListingsByMatch = async (req, res) => {
 exports.getTicketListingById = async (req, res) => {
   try {
     const listing = await TicketListing.findById(req.params.id)
-      .populate("seller", "name email")
+      .populate("seller", "profile.fullName email")
       .select('+sectionImage'); // Include sectionImage in response
 
     if (!listing) return res.status(404).json({ message: "Listing not found." });
@@ -451,7 +451,7 @@ exports.getPurchasedTickets = async (req, res) => {
           select: 'name sections'
         }
       })
-      .populate('seller', 'profile.name email')
+      .populate('seller', 'profile.fullName email')
       .sort({ purchaseDate: -1 });
 
     const competitions = await Competition.find({});
@@ -572,7 +572,7 @@ exports.getPurchasedTicketById = async (req, res) => {
           select: 'name sections'
         }
       })
-      .populate('seller', 'profile.name email');
+      .populate('seller', 'profile.fullName email');
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
@@ -673,7 +673,7 @@ exports.reportTicketIssue = async (req, res) => {
     // Find the sold ticket
     const soldTicket = await SoldTicket.findById(ticketId)
       .populate('match', 'homeTeam awayTeam venue date')
-      .populate('seller', 'profile.name email');
+      .populate('seller', 'profile.fullName email');
 
     if (!soldTicket) {
       return res.status(404).json({
@@ -789,7 +789,7 @@ exports.getSalesHistory = async (req, res) => {
           select: 'name sections'
         }
       })
-      .populate('buyer', 'profile.name email')
+      .populate('buyer', 'profile.fullName email')
       .sort({ purchaseDate: -1 });
 
     const competitions = await Competition.find({});
@@ -1040,8 +1040,8 @@ exports.getAdminDisputes = async (req, res) => {
       status: { $in: ['under_review', 'completed', 'refunded', 'partial_settlement'] },
       issueReported: true
     })
-      .populate('buyer', 'profile.name email')
-      .populate('seller', 'profile.name email')
+      .populate('buyer', 'profile.fullName email')
+      .populate('seller', 'profile.fullName email')
       .populate({
         path: 'ticket',
         select: 'match category blockArea sectionImage',
@@ -1063,8 +1063,8 @@ exports.getAdminDisputes = async (req, res) => {
         category: ticket?.category,
         blockArea: ticket?.blockArea,
         sectionImage: ticket?.sectionImage,
-        buyerName: transaction.buyer?.profile?.name || transaction.buyer?.email,
-        sellerName: transaction.seller?.profile?.name || transaction.seller?.email,
+        buyerName: transaction.buyer?.profile?.fullName || transaction.buyer?.email,
+        sellerName: transaction.seller?.profile?.fullName || transaction.seller?.email,
         totalPrice: transaction.totalPrice,
         commission: transaction.commissionAmount,
         totalCost: transaction.totalCost,
@@ -1211,8 +1211,8 @@ exports.getAdminCommissionSummary = async (req, res) => {
       status: 'completed',
       ...dateFilter
     })
-      .populate('buyer', 'profile.name email level')
-      .populate('seller', 'profile.name email')
+      .populate('buyer', 'profile.fullName email level')
+      .populate('seller', 'profile.fullName email')
       .populate({
         path: 'ticket',
         select: 'match category blockArea sectionImage',
@@ -1233,9 +1233,9 @@ exports.getAdminCommissionSummary = async (req, res) => {
         purchaseId: `PUR-${tx._id.toString().slice(-6).toUpperCase()}`,
         match: match ? `${match.homeTeam} vs ${match.awayTeam}` : 'Match not found',
         venue: match?.venueName || 'Venue not available',
-        buyer: tx.buyer?.profile?.name || tx.buyer?.email,
+        buyer: tx.buyer?.profile?.fullName || tx.buyer?.email,
         buyerLevel: tx.buyerLevel,
-        seller: tx.seller?.profile?.name || tx.seller?.email,
+        seller: tx.seller?.profile?.fullName || tx.seller?.email,
         saleAmount: tx.totalPrice,
         commission: tx.commissionAmount,
         commissionRate: (tx.commissionRate * 100).toFixed(1) + '%',

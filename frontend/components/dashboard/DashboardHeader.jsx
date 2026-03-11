@@ -167,7 +167,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
       <div className="hidden md:flex flex-col items-start">
         <h1 className="text-base sm:text-lg font-semibold text-white">
           {getGreeting()}
-          {user ? `, ${user.profile?.name || 'User'}!` : '!'}
+          {user ? `, ${user.profile?.fullName || 'User'}!` : '!'}
         </h1>
         <div className="flex items-center gap-2">
           <p className="text-sm text-blue-200">
@@ -349,10 +349,6 @@ export default function DashboardHeader({ onToggleSidebar }) {
                 >
                   <FaUserCircle className="mr-2 h-4 w-4" />
                   My Profile
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 flex items-center transition">
-                  <FaCog className="mr-2 h-4 w-4" />
-                  Settings
                 </button>
                 <div className="border-t border-gray-700 my-1"></div>
                 <button

@@ -103,7 +103,7 @@ exports.getPendingWithdrawals = async (req, res) => {
     }
 
     const withdrawals = await Withdrawal.find({ status: 'pending' })
-      .populate('seller', 'email profile.name points')
+      .populate('seller', 'email profile.fullName points')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -221,8 +221,8 @@ exports.approveWithdrawal = async (req, res) => {
 
     // Populate the withdrawal for response
     const populatedWithdrawal = await Withdrawal.findById(withdrawalId)
-      .populate('seller', 'email profile.name points')
-      .populate('approvedBy', 'email profile.name');
+      .populate('seller', 'email profile.fullName points')
+      .populate('approvedBy', 'email profile.fullName');
 
     res.status(200).json({
       success: true,
@@ -351,8 +351,8 @@ exports.getAllWithdrawals = async (req, res) => {
     }
 
     const withdrawals = await Withdrawal.find()
-      .populate('seller', 'email profile.name points')
-      .populate('approvedBy', 'email profile.name')
+      .populate('seller', 'email profile.fullName points')
+      .populate('approvedBy', 'email profile.fullName')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -374,7 +374,7 @@ exports.getSellerPointsDebug = async (req, res) => {
   try {
     const { sellerId } = req.params;
     
-    const seller = await User.findById(sellerId).select('points totalWithdrawn email profile.name');
+    const seller = await User.findById(sellerId).select('points totalWithdrawn email profile.fullName');
     const withdrawals = await Withdrawal.find({ seller: sellerId });
 
     res.status(200).json({

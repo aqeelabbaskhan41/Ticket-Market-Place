@@ -109,7 +109,7 @@ exports.register = async (req, res) => {
       activeRole: activeRole,
       status: userStatus,
       profile: {
-        name,
+        fullName: name,
         phone,
       },
       // Initialize empty data structures

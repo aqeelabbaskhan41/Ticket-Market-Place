@@ -10,6 +10,7 @@ import {
   FaFutbol,
   FaExchangeAlt,
   FaChartBar,
+  FaBalanceScale,
   FaCog,
   FaSignOutAlt,
   FaUserCircle,
@@ -24,12 +25,12 @@ const navigation = {
   admin: [
     { name: 'Dashboard', href: '/admin', icon: FaHome },
     { name: 'User Management', href: '/admin/users', icon: FaUsers },
-    { name: 'User Levels', href: '/admin/levels', icon: FaCrown }, // Add User Levels
+    { name: 'User Levels', href: '/admin/levels', icon: FaCrown },
     { name: 'Pending Approvals', href: '/admin/approvals', icon: FaClock },
     { name: 'Matches & Events', href: '/admin/matches', icon: FaFutbol },
     { name: 'Transactions', href: '/admin/transactions', icon: FaExchangeAlt },
-    { name: 'Reports', href: '/admin/reports', icon: FaChartBar },
-    { name: 'System Settings', href: '/admin/settings', icon: FaCog },
+    { name: 'Manage Disputes', href: '/admin/disputes', icon: FaBalanceScale },
+    { name: 'Commission Reports', href: '/admin/reports', icon: FaChartBar },
   ],
   seller: [
     { name: 'Dashboard', href: '/seller', icon: FaHome },
@@ -37,7 +38,6 @@ const navigation = {
     { name: 'Deliveries', href: '/seller/deliveries', icon: FaTruck },
     { name: 'Create Listing', href: '/seller/listings/create', icon: FaTicketAlt },
     { name: 'Sales History', href: '/seller/sales', icon: FaExchangeAlt },
-    { name: 'Points Balance', href: '/seller/points', icon: FaChartBar },
     { name: 'Withdraw Points', href: '/seller/withdraw', icon: FaExchangeAlt },
     { name: 'Profile', href: '/seller/profile', icon: FaUserCircle },
   ],
@@ -45,9 +45,6 @@ const navigation = {
     { name: 'Dashboard', href: '/buyer', icon: FaHome },
     { name: 'Browse Matches', href: '/buyer/matches', icon: FaFutbol },
     { name: 'My Tickets', href: '/buyer/tickets', icon: FaTicketAlt },
-    { name: 'Purchase History', href: '/buyer/history', icon: FaExchangeAlt },
-    { name: 'Points Balance', href: '/buyer/points', icon: FaChartBar },
-    { name: 'Buy Points', href: '/buyer/topup', icon: FaExchangeAlt },
     { name: 'Profile', href: '/buyer/profile', icon: FaUserCircle },
   ],
 };

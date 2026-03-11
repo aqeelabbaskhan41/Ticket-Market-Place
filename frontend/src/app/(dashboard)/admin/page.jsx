@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   FaUsers, 
   FaClock, 
@@ -23,6 +24,7 @@ import {
 } from 'react-icons/fa';
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -241,7 +243,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Commission Report */}
-          <button className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-500/20 transition-all duration-200 group">
+          <button 
+            onClick={() => router.push('/admin/reports')}
+            className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-500/20 transition-all duration-200 group text-left w-full"
+          >
             <div className="flex items-center">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-500/30 transition-colors duration-200 border border-yellow-400/30">
                 <FaChartBar className="text-sm sm:text-base text-yellow-400 group-hover:text-yellow-300" />
@@ -252,7 +257,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
           </button>
 
           {/* Manage Disputes */}
-          <button className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-red-400/50 hover:bg-red-500/20 transition-all duration-200 group">
+          <button 
+            onClick={() => router.push('/admin/disputes')}
+            className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-red-400/50 hover:bg-red-500/20 transition-all duration-200 group text-left w-full"
+          >
             <div className="flex items-center">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-red-500/30 transition-colors duration-200 border border-red-400/30">
                 <FaBalanceScale className="text-sm sm:text-base text-red-400 group-hover:text-red-300" />
@@ -265,7 +273,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
           </button>
 
           {/* User Management */}
-          <button className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-blue-400/50 hover:bg-blue-500/20 transition-all duration-200 group">
+          <button 
+            onClick={() => router.push('/admin/users')}
+            className="flex items-center justify-between p-3 sm:p-4 border border-white/20 rounded-xl hover:border-blue-400/50 hover:bg-blue-500/20 transition-all duration-200 group text-left w-full"
+          >
             <div className="flex items-center">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-500/30 transition-colors duration-200 border border-blue-400/30">
                 <FaUsers className="text-sm sm:text-base text-blue-400 group-hover:text-blue-300" />

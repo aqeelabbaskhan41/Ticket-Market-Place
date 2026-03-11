@@ -62,8 +62,8 @@ exports.getAdminDashboard = async (req, res) => {
 
     // Get recent transactions for activity feed
     const recentTransactions = await Transaction.find()
-      .populate('buyer', 'name email')
-      .populate('seller', 'name email')
+      .populate('buyer', 'profile.fullName email')
+      .populate('seller', 'profile.fullName email')
       .populate('ticket')
       .sort({ createdAt: -1 })
       .limit(10);
@@ -189,22 +189,68 @@ exports.getCommissionReport = async (req, res) => {
           } 
         };
         break;
+      case 'all':
+      default:
+        dateFilter = {};
+        break;
     }
 
     const commissionReport = await Transaction.aggregate([
       {
         $match: {
           ...dateFilter,
-          status: { $in: ['completed', 'partial_settlement'] }
+          status: { $in: ['completed', 'partial_settlement', 'pending'] }
         }
       },
       {
         $group: {
           _id: null,
-          totalCommission: { $sum: '$commissionAmount' },
+          totalCommission: { 
+            $sum: { 
+              $cond: [
+                { $in: ['$status', ['completed', 'partial_settlement']] }, 
+                '$commissionAmount', 
+                0
+              ] 
+            } 
+          },
+          totalPendingCommission: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$status', 'pending'] }, 
+                '$commissionAmount', 
+                0
+              ] 
+            } 
+          },
           totalSales: { $sum: '$totalPrice' },
           transactionCount: { $sum: 1 },
-          averageCommission: { $avg: '$commissionAmount' }
+          completedTransactions: {
+            $sum: { 
+              $cond: [
+                { $in: ['$status', ['completed', 'partial_settlement']] }, 
+                1, 
+                0
+              ] 
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalCommission: 1,
+          totalPendingCommission: 1,
+          totalSales: 1,
+          transactionCount: 1,
+          completedTransactions: 1,
+          averageCommission: { 
+            $cond: [
+              { $gt: ['$completedTransactions', 0] },
+              { $divide: ['$totalCommission', '$completedTransactions'] },
+              0
+            ]
+          }
         }
       }
     ]);
@@ -214,7 +260,7 @@ exports.getCommissionReport = async (req, res) => {
       {
         $match: {
           ...dateFilter,
-          status: { $in: ['completed', 'partial_settlement'] }
+          status: { $in: ['completed', 'partial_settlement', 'pending'] }
         }
       },
       {
@@ -231,12 +277,29 @@ exports.getCommissionReport = async (req, res) => {
       {
         $group: {
           _id: '$ticketDetails.category',
-          totalCommission: { $sum: '$commissionAmount' },
+          totalCommission: { 
+            $sum: { 
+              $cond: [
+                { $in: ['$status', ['completed', 'partial_settlement']] }, 
+                '$commissionAmount', 
+                0
+              ] 
+            } 
+          },
+          totalPendingCommission: { 
+            $sum: { 
+              $cond: [
+                { $eq: ['$status', 'pending'] }, 
+                '$commissionAmount', 
+                0
+              ] 
+            } 
+          },
           transactionCount: { $sum: 1 }
         }
       },
       {
-        $sort: { totalCommission: -1 }
+        $sort: { totalCommission: -1, totalPendingCommission: -1 }
       }
     ]);
 

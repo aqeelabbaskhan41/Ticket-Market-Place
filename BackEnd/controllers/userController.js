@@ -55,7 +55,7 @@ exports.addPointsToBuyer = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Added ${points} points to ${user.profile?.name || user.email}`,
+      message: `Added ${points} points to ${user.profile?.fullName || user.email}`,
       user
     });
   } catch (err) {
@@ -81,7 +81,7 @@ exports.updateUserPoints = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Updated points to ${points} for ${user.profile?.name || user.email}`,
+      message: `Updated points to ${points} for ${user.profile?.fullName || user.email}`,
       user
     });
   } catch (err) {
@@ -128,7 +128,7 @@ exports.getProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, phone, email } = req.body;
+    const { fullName, phone, email } = req.body;
     
     const user = await User.findById(req.user.id);
     
@@ -154,8 +154,7 @@ exports.updateProfile = async (req, res) => {
     // Update profile fields
     user.profile = {
       ...user.profile,
-      firstName: firstName || user.profile?.firstName,
-      lastName: lastName || user.profile?.lastName,
+      fullName: fullName || user.profile?.fullName,
       phone: phone || user.profile?.phone
     };
 
