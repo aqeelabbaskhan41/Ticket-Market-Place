@@ -55,10 +55,7 @@ exports.updateCommissionSettings = async (req, res) => {
       }
     }
 
-    let settings = await CommissionSettings.findOne();
-    if (!settings) {
-      settings = new CommissionSettings();
-    }
+    const settings = await CommissionSettings.getSettings();
 
     if (level1) {
       settings.level1 = { 

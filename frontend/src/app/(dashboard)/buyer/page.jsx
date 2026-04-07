@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaCoins, FaShoppingCart, FaHistory, FaUser, FaTicketAlt, FaSearch, FaFire, FaSyncAlt } from 'react-icons/fa';
 
 export default function BuyerDashboard() {
+  const router = useRouter();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -185,7 +187,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <button 
             className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-blue-400/50 hover:bg-blue-500/20 transition-all duration-200 group"
-            onClick={() => window.location.href = '/events'}
+            onClick={() => router.push('/buyer/matches')}
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-500/30 transition-colors duration-200 border border-blue-400/30">
               <FaSearch className="text-sm sm:text-base text-blue-400 group-hover:text-blue-300" />
@@ -195,7 +197,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
           <button 
             className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-green-400/50 hover:bg-green-500/20 transition-all duration-200 group"
-            onClick={() => window.location.href = '/my-tickets'}
+            onClick={() => router.push('/buyer/tickets')}
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-500/30 transition-colors duration-200 border border-green-400/30">
               <FaTicketAlt className="text-sm sm:text-base text-green-400 group-hover:text-green-300" />
@@ -205,9 +207,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
           <button 
             className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-500/20 transition-all duration-200 group"
-            onClick={() => window.location.href = '/buy-points'}
+            onClick={() => router.push('/buyer/topup')}
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-500/30 transition-colors duration-200 border border-yellow-400/30">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-500/30 transition-colors duration-200 border border-blue-400/30">
               <FaCoins className="text-sm sm:text-base text-yellow-400 group-hover:text-yellow-300" />
             </div>
             <span className="font-semibold text-white text-sm sm:text-base">Get More Points</span>
@@ -215,7 +217,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
           <button 
             className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-purple-400/50 hover:bg-purple-500/20 transition-all duration-200 group"
-            onClick={() => window.location.href = '/order-history'}
+            onClick={() => router.push('/buyer/history')}
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-purple-500/30 transition-colors duration-200 border border-purple-400/30">
               <FaHistory className="text-sm sm:text-base text-purple-400 group-hover:text-purple-300" />
@@ -243,7 +245,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
           <p className="text-blue-200 mb-4">Check back later for exciting matches and events</p>
           <button 
             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold inline-flex items-center gap-2 transition-all duration-200"
-            onClick={() => window.location.href = '/events'}
+            onClick={() => router.push('/buyer/matches')}
           >
             <FaSearch />
             Browse All Events

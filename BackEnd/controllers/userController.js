@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { createNotification } = require('./notificationController');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -24,8 +25,34 @@ exports.updateUserStatus = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
+    const oldStatus = user.status;
     user.status = status;
     await user.save();
+
+    // Notify user if status changed
+    if (oldStatus !== status) {
+      let title, message, link;
+      if (status === 'approved') {
+        title = 'Account Approved';
+        message = user.role === 'seller' ? 'Your seller account has been approved. You can now list tickets for sale!' : 'Your account has been approved.';
+        link = user.role === 'seller' ? '/seller' : '/buyer';
+      } else if (status === 'suspended') {
+        title = 'Account Suspended';
+        message = 'Your account has been suspended. Please contact support for more information.';
+        link = '/support';
+      }
+
+      if (title) {
+        await createNotification(
+          user._id,
+          'system',
+          title,
+          message,
+          link,
+          user._id
+        );
+      }
+    }
 
     res.status(200).json({ success: true, user });
   } catch (err) {

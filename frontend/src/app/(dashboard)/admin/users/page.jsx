@@ -60,7 +60,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     const searchMatch =
       searchTerm === "" ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.profile?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.profile?.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
     return roleMatch && statusMatch && searchMatch;
   });
 
@@ -114,9 +114,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     );
   };
 
-  // Calculate pending sellers count
-  const pendingSellersCount = users.filter(
-    (u) => u.status === "pending" && u.role === "seller"
+  // Calculate pending users count
+  const pendingUsersCount = users.filter(
+    (u) => u.status === "pending"
   ).length;
 
   if (loading) {
@@ -148,16 +148,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
             <Link
               href="/admin/approvals"
               className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold ${
-                pendingSellersCount > 0 
+                pendingUsersCount > 0 
                   ? "bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white border border-yellow-500/30"
                   : "bg-white/10 hover:bg-white/20 text-blue-200 border border-white/20"
               }`}
             >
               <FaClock className="text-xs" />
               Approvals
-              {pendingSellersCount > 0 && (
+              {pendingUsersCount > 0 && (
                 <span className="bg-white/20 text-white px-1.5 py-0.5 rounded-full text-xs min-w-5 h-5 flex items-center justify-center">
-                  {pendingSellersCount}
+                  {pendingUsersCount}
                 </span>
               )}
             </Link>
@@ -244,7 +244,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
           </div>
         </div>
 
-        {/* Pending Sellers */}
+        {/* Pending Approvals */}
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20">
           <div className="flex items-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 border border-yellow-400/30">
@@ -252,10 +252,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-blue-200">
-                Pending Sellers
+                Pending Approvals
               </p>
               <p className="text-xl sm:text-2xl font-bold text-white">
-                {pendingSellersCount}
+                {pendingUsersCount}
               </p>
             </div>
           </div>
@@ -403,6 +403,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                         <div className="text-sm font-medium text-white truncate max-w-[120px] sm:max-w-[200px]">
                           {user.profile?.fullName || "No Name"}
                         </div>
+                        {user.role === 'seller' && user.sellerData?.businessName && (
+                          <div className="text-xs text-yellow-400 font-semibold truncate max-w-[120px] sm:max-w-[200px]">
+                            {user.sellerData.businessName}
+                          </div>
+                        )}
                         <div className="text-sm text-blue-200 truncate max-w-[120px] sm:max-w-[200px]">
                           {user.email}
                         </div>

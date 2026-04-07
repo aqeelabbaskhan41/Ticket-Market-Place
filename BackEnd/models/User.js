@@ -53,6 +53,7 @@ const userSchema = new mongoose.Schema({
 
   // Seller-specific data (only for actual sellers)
   sellerData: {
+    businessName: { type: String, trim: true },
     listings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
     totalSales: { type: Number, default: 0 },
     totalEarnings: { type: Number, default: 0 },

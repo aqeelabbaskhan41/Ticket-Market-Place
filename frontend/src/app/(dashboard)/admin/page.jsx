@@ -194,18 +194,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
           </div>
         </div>
 
-        {/* Active Listings */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20">
+        {/* Pending Approvals */}
+        <div 
+          onClick={() => router.push('/admin/approvals')}
+          className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 cursor-pointer hover:bg-white/20 transition-all duration-200"
+        >
           <div className="flex items-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 border border-green-400/30">
-              <FaFutbol className="text-lg sm:text-xl text-green-400" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 border border-red-400/30">
+              <FaClock className="text-lg sm:text-xl text-red-400" />
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-medium text-blue-200">Active Listings</p>
+              <p className="text-xs sm:text-sm font-medium text-blue-200">Pending Approvals</p>
               <p className="text-xl sm:text-2xl font-bold text-white">
-                {dashboardData.activeListings?.toLocaleString() || 0}
+                {dashboardData.pendingUsers || 0}
               </p>
-              <p className="text-green-300 text-xs mt-1">Available tickets</p>
+              <p className="text-red-300 text-xs mt-1">Users awaiting review</p>
             </div>
           </div>
         </div>

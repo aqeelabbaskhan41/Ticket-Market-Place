@@ -17,12 +17,14 @@ import {
 } from 'react-icons/fa';
 import { useRole } from '../../src/contexts/RoleContext';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 export default function DashboardHeader({ onToggleSidebar }) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [lastNotificationId, setLastNotificationId] = useState(null);
   
   const notificationRef = useRef(null);
   
@@ -30,18 +32,27 @@ export default function DashboardHeader({ onToggleSidebar }) {
     currentRole, 
     user, 
     handleRoleSwitch,
+    requestSellerRole,
     canSwitchRoles,
     isActualSeller,
+    isActualBuyer,
     logout 
   } = useRole();
   const router = useRouter();
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
+  const handleBecomeSeller = () => {
+    const businessName = prompt('Please enter your Business Name:');
+    if (businessName !== null) {
+      requestSellerRole(businessName);
+    }
+  };
+
   useEffect(() => {
-    fetchNotifications();
-    // Poll for notifications every 60 seconds
-    const interval = setInterval(fetchNotifications, 60000);
+    fetchNotifications(true);
+    // Poll for notifications every 30 seconds (made it faster)
+    const interval = setInterval(() => fetchNotifications(false), 30000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -58,7 +69,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
     };
   }, [notificationRef]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (isInitial = false) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -68,6 +79,24 @@ export default function DashboardHeader({ onToggleSidebar }) {
       });
       if (res.ok) {
         const data = await res.json();
+        
+        // Check for new notifications to show toast
+        if (data.notifications && data.notifications.length > 0) {
+          const latestNotif = data.notifications[0];
+          
+          // If this is a new notification that we haven't seen before
+          if (!isInitial && lastNotificationId && latestNotif._id !== lastNotificationId && !latestNotif.read) {
+            toast.info(latestNotif.title, {
+              onClick: () => markAsRead(latestNotif._id, latestNotif.link),
+              icon: <FaBell className="text-blue-400" />
+            });
+           }
+           
+           if (isInitial || !lastNotificationId || latestNotif._id !== lastNotificationId) {
+             setLastNotificationId(latestNotif._id);
+           }
+         }
+        
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount);
       }
@@ -182,24 +211,40 @@ export default function DashboardHeader({ onToggleSidebar }) {
       </div>
 
       {/* 🔹 Right: Icons */}
-      <div className="flex items-center gap-4 sm:gap-6 mt-3 sm:mt-0">
+      <div className="flex items-center gap-3 sm:gap-4 mt-3 sm:mt-0">
         {/* Role Switch Button - Only show for sellers */}
         {canSwitchRoles && (
           <div className="relative group">
             <button
               onClick={() => handleRoleSwitch(currentRole === 'seller' ? 'buyer' : 'seller')}
-              className="flex items-center gap-2 px-3 py-2 text-white bg-blue-600/50 hover:bg-blue-600/70 rounded-lg transition-all duration-200 border border-blue-400/30"
-              title={`Switch to ${currentRole === 'seller' ? 'Buyer' : 'Seller'} mode`}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-300 border ${
+                currentRole === 'seller' 
+                  ? "bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30" 
+                  : "bg-green-600/20 text-green-400 border-green-500/30 hover:bg-green-600/30"
+              }`}
             >
-              <FaExchangeAlt className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm font-medium">
-                {currentRole === 'seller' ? 'Shop Tickets' : 'Seller Mode'}
+              <FaExchangeAlt className={`h-3.5 w-3.5 ${currentRole === 'seller' ? "animate-pulse" : ""}`} />
+              <span className="hidden lg:inline text-xs font-bold uppercase tracking-wider">
+                {currentRole === 'seller' ? 'Switch to Buyer' : 'Switch to Seller'}
               </span>
             </button>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-              {currentRole === 'seller' ? 'Switch to buyer mode to purchase tickets' : 'Switch back to seller mode'}
+            <div className="absolute top-full right-0 mt-2 px-3 py-1.5 text-[10px] text-white bg-gray-900/90 backdrop-blur-md rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none border border-white/10 shadow-2xl">
+              {currentRole === 'seller' ? 'Browse and buy tickets' : 'Manage your listings and sales'}
             </div>
           </div>
+        )}
+
+        {/* Become a Seller Button - Only for Buyers */}
+        {isActualBuyer && user?.status === 'approved' && (
+          <button
+            onClick={handleBecomeSeller}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/20 group"
+          >
+            <FaStore className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">
+              Become a Seller
+            </span>
+          </button>
         )}
 
         {/* Notifications */}

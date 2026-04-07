@@ -70,6 +70,40 @@ export function RoleProvider({ children }) {
     }
   };
 
+  const requestSellerRole = async (businessName) => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+      
+      const response = await fetch(`${apiBaseUrl}/roles/request-seller`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ businessName })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        alert(data.message);
+        window.location.reload();
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Request seller role error:', error);
+      alert('Error requesting seller role. Please try again.');
+    }
+  };
+
   const refreshUser = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -101,6 +135,7 @@ export function RoleProvider({ children }) {
     currentRole: user?.activeRole || user?.role || 'buyer',
     actualRole: user?.role || 'buyer',
     handleRoleSwitch,
+    requestSellerRole,
     refreshUser,
     canSwitchRoles: user?.role === 'seller', // ONLY sellers can switch
     isBuyer: (user?.activeRole || user?.role) === 'buyer',

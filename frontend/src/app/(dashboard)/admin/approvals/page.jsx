@@ -45,11 +45,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         const data = await response.json();
         
         if (data.success) {
-          // Filter for pending sellers only
-          const pendingSellers = data.users.filter(user => 
-            user.status === 'pending' && user.role === 'seller'
+          // Show all pending users
+          const pending = data.users.filter(user => 
+            user.status === 'pending'
           );
-          setPendingUsers(pendingSellers);
+          setPendingUsers(pending);
         } else {
           setError(data.message || 'Failed to fetch users');
         }
@@ -210,6 +210,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                       <h3 className="text-lg sm:text-xl font-semibold text-white truncate">
                         {user.profile?.fullName || 'Unknown User'}
                       </h3>
+                      {user.sellerData?.businessName && (
+                        <div className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-400/30 shadow-sm">
+                          Business: {user.sellerData.businessName}
+                        </div>
+                      )}
                       
                       <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2">
                         <div className="flex items-center text-blue-200 text-sm">

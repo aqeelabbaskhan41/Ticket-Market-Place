@@ -1,5 +1,7 @@
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const jwt = require("jsonwebtoken");
+const { createNotification } = require("./notificationController");
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -67,7 +69,7 @@ exports.getMe = async (req, res) => {
 // Register User
 exports.register = async (req, res) => {
   try {
-    const { email, password, name, phone, role } = req.body;
+    const { email, password, name, phone, role, businessName } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -88,14 +90,8 @@ exports.register = async (req, res) => {
       // Admin-created users are always approved (admins, sellers, buyers)
       userStatus = "approved";
     } else {
-      // Regular registration: buyers auto-approved, sellers need approval
-      if (role === "buyer") {
-        userStatus = "approved"; // Auto-approve buyers
-      } else if (role === "seller") {
-        userStatus = "pending"; // Sellers need manual approval
-      } else {
-        userStatus = "pending"; // Default for other roles
-      }
+      // Regular registration: ALL users need manual approval
+      userStatus = "pending";
     }
 
     // Set activeRole based on actual role
@@ -121,6 +117,7 @@ exports.register = async (req, res) => {
       },
       ...(role === 'seller' && {
         sellerData: {
+          businessName,
           listings: [],
           totalSales: 0,
           totalEarnings: 0,
@@ -144,6 +141,19 @@ exports.register = async (req, res) => {
       message = "User created and auto-approved by admin";
     } else if (user.status === "pending") {
       message = "Registration successful. Awaiting admin approval.";
+      
+      // Notify admins of new pending user
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await createNotification(
+          admin._id,
+          'system',
+          'New User Registration',
+          `A new user ${user.email} (${user.role}) has registered and is awaiting approval.`,
+          '/admin/approvals',
+          user._id
+        );
+      }
     } else {
       message = "Registration successful. Account is now active.";
     }
@@ -248,6 +258,87 @@ exports.login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error during login",
+    });
+  }
+};
+
+// Request to become a seller (BUYERS ONLY)
+exports.requestSellerRole = async (req, res) => {
+  try {
+    const { businessName } = req.body;
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.role === 'seller') {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already a seller'
+      });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Admins cannot request to be sellers'
+      });
+    }
+
+    // Update user role to pending seller
+    user.role = 'seller';
+    user.status = 'pending';
+    user.activeRole = 'buyer'; // Keep them in buyer mode until approved
+    
+    // Initialize seller data
+    user.sellerData = {
+      businessName,
+      listings: [],
+      totalSales: 0,
+      totalEarnings: 0,
+      rating: 0,
+      reviewCount: 0,
+      isVerified: false,
+      bankDetails: {}
+    };
+
+    await user.save();
+
+    // Notify admins of new seller request
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      await createNotification(
+        admin._id,
+        'system',
+        'Seller Role Request',
+        `User ${user.email} has requested to become a seller${businessName ? ` for "${businessName}"` : ''}.`,
+        '/admin/approvals',
+        user._id
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Request to become a seller submitted successfully. Awaiting admin approval.',
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        activeRole: user.activeRole,
+        sellerData: user.sellerData
+      }
+    });
+  } catch (error) {
+    console.error('Request seller role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during seller role request'
     });
   }
 };

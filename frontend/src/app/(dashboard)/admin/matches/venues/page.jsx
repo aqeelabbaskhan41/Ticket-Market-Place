@@ -33,6 +33,7 @@ export default function VenuesManagement() {
   const [seatCategories, setSeatCategories] = useState([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryForm, setCategoryForm] = useState({ name: '' });
+  const [editingCategory, setEditingCategory] = useState(null);
   const [categoryLoading, setCategoryLoading] = useState(false);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function VenuesManagement() {
     }
   };
 
-  const addCategory = async (e) => {
+  const saveCategory = async (e) => {
     e.preventDefault();
     if (!categoryForm.name.trim()) return;
 
@@ -60,8 +61,14 @@ export default function VenuesManagement() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/seat-categories`, {
-        method: 'POST',
+      const url = editingCategory 
+        ? `${API_BASE_URL}/seat-categories/${editingCategory._id}`
+        : `${API_BASE_URL}/seat-categories`;
+      
+      const method = editingCategory ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: token ? `Bearer ${token}` : '',
@@ -70,15 +77,26 @@ export default function VenuesManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to add category');
+      if (!res.ok) throw new Error(data.message || 'Failed to save category');
 
       setCategoryForm({ name: '' });
+      setEditingCategory(null);
       fetchSeatCategories();
     } catch (err) {
       setError(err.message);
     } finally {
       setCategoryLoading(false);
     }
+  };
+
+  const startEditCategory = (category) => {
+    setEditingCategory(category);
+    setCategoryForm({ name: category.name });
+  };
+
+  const cancelEditCategory = () => {
+    setEditingCategory(null);
+    setCategoryForm({ name: '' });
   };
 
   const deleteCategory = async (id) => {
@@ -553,6 +571,87 @@ export default function VenuesManagement() {
             </div>
           )}
         </form>
+      </div>
+
+      {/* Seat Categories Management - Added Section */}
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <FaUsers className="text-blue-400" />
+              Seat Categories
+            </h2>
+            <p className="text-blue-200 text-sm mt-1">Manage categories like Away, Central, VIP, etc.</p>
+          </div>
+        </div>
+
+        <form onSubmit={saveCategory} className="flex flex-col sm:flex-row gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Category Name (e.g. Away, Central)"
+            value={categoryForm.name}
+            onChange={(e) => setCategoryForm({ name: e.target.value })}
+            className="flex-1 bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-blue-300/50 focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={categoryLoading}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+            >
+              {categoryLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                editingCategory ? <FaEdit size={14} /> : <FaPlus size={14} />
+              )}
+              {editingCategory ? 'Update' : 'Add Category'}
+            </button>
+            {editingCategory && (
+              <button
+                type="button"
+                onClick={cancelEditCategory}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 border border-white/20"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+
+        {seatCategories.length === 0 ? (
+          <div className="text-center py-8 bg-white/5 rounded-xl border border-dashed border-white/20">
+            <p className="text-blue-200 text-sm">No categories added yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {seatCategories.map((category) => (
+              <div
+                key={category._id}
+                className="group relative bg-white/5 rounded-xl p-3 border border-white/10 hover:border-blue-400/50 hover:bg-white/10 transition-all duration-200"
+              >
+                <div className="text-white font-medium text-sm pr-6 truncate" title={category.name}>
+                  {category.name}
+                </div>
+                <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => startEditCategory(category)}
+                    className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                    title="Edit"
+                  >
+                    <FaEdit size={10} />
+                  </button>
+                  <button
+                    onClick={() => deleteCategory(category._id)}
+                    className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                    title="Delete"
+                  >
+                    <FaTrash size={10} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Venues List */}

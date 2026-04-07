@@ -60,6 +60,27 @@ exports.markAllAsRead = async (req, res) => {
     }
 };
 
+// Delete a notification
+exports.deleteNotification = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const notification = await Notification.findOneAndDelete({
+            _id: id,
+            recipient: req.user.id
+        });
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        res.status(200).json({ success: true, message: 'Notification deleted' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // Helper function to create notification (internal use)
 exports.createNotification = async (recipientId, type, title, message, link, relatedId) => {
     try {

@@ -127,6 +127,43 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     setFilteredUsers(filtered);
   };
 
+  const handleCommissionSettingChange = (level, field, value) => {
+    setTempCommissionSettings(prev => ({
+      ...prev,
+      [level]: {
+        ...prev[level],
+        [field]: field === 'commissionRate' ? parseFloat(value) / 100 : value
+      }
+    }));
+  };
+
+  const updateCommissionSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/commission/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(tempCommissionSettings)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCommissionSettings(data.settings);
+        setShowCommissionSettings(false);
+        showMessage('success', 'Commission settings updated successfully');
+      } else {
+        const data = await response.json();
+        showMessage('error', data.message || 'Failed to update settings');
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      showMessage('error', 'Error updating commission settings');
+    }
+  };
+
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);

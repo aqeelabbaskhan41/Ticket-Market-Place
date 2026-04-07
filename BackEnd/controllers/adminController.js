@@ -3,6 +3,7 @@ const TicketListing = require("../models/TicketListing");
 const Transaction = require("../models/Transaction");
 const SoldTicket = require("../models/SoldTicket");
 const Match = require("../models/Match");
+const CommissionSettings = require("../models/CommissionSettings");
 
 // Get Admin Dashboard Stats
 exports.getAdminDashboard = async (req, res) => {
@@ -15,8 +16,15 @@ exports.getAdminDashboard = async (req, res) => {
       });
     }
 
+    // Get commission settings for the dashboard
+    const settings = await CommissionSettings.getSettings();
+    const defaultRate = (settings.level1?.commissionRate * 100) || 10;
+
     // Get total users count
     const totalUsers = await User.countDocuments();
+    
+    // Get pending users count
+    const pendingUsers = await User.countDocuments({ status: 'pending' });
     
     // Get active listings count
     const activeListings = await TicketListing.countDocuments({ status: 'active' });
@@ -66,7 +74,12 @@ exports.getAdminDashboard = async (req, res) => {
       .populate('seller', 'profile.fullName email')
       .populate('ticket')
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(5);
+
+    // Get recent user registrations
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     // Calculate total points in circulation (user points + pending commissions)
     const usersPoints = await User.aggregate([
@@ -79,7 +92,7 @@ exports.getAdminDashboard = async (req, res) => {
     ]);
 
     // Format activity feed
-    const recentActivity = recentTransactions.map(transaction => {
+    const transactionActivity = recentTransactions.map(transaction => {
       let type, message;
       
       if (transaction.status === 'pending') {
@@ -105,6 +118,25 @@ exports.getAdminDashboard = async (req, res) => {
       };
     });
 
+    const userActivity = recentUsers.map(user => {
+      let roleLabel = user.role;
+      if (user.role === 'seller' && user.sellerData?.businessName) {
+        roleLabel = `Seller (${user.sellerData.businessName})`;
+      }
+      
+      return {
+        type: 'user_registered',
+        message: `New user registered: ${user.email} as ${roleLabel}`,
+        time: user.createdAt,
+        userId: user._id,
+        status: user.status
+      };
+    });
+
+    const recentActivity = [...transactionActivity, ...userActivity]
+      .sort((a, b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 10);
+
     const totalCommission = commissionData[0]?.totalCommission || 0;
     const totalPendingCommission = pendingCommissionData[0]?.totalPendingCommission || 0;
     const totalPointsInCirculation = usersPoints[0]?.totalPoints + totalPendingCommission || 0;
@@ -114,6 +146,7 @@ exports.getAdminDashboard = async (req, res) => {
       data: {
         // Core Metrics
         totalUsers,
+        pendingUsers,
         activeListings,
         totalTransactions,
         pendingDisputes,
@@ -121,7 +154,7 @@ exports.getAdminDashboard = async (req, res) => {
         // Commission Metrics
         commissionEarned: totalCommission,
         pendingCommissions: totalPendingCommission,
-        platformCommissionRate: 10, // 10% default
+        platformCommissionRate: defaultRate, 
         
         // Points Metrics
         totalPointsInCirculation,
