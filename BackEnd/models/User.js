@@ -3,7 +3,12 @@ const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String },
+  googleId: { type: String, unique: true, sparse: true },
+  facebookId: { type: String, unique: true, sparse: true },
+  username: { type: String, unique: true, sparse: true, trim: true },
+
+
   role: { 
     type: String, 
     enum: ['admin', 'seller', 'buyer'], 
@@ -28,9 +33,10 @@ const userSchema = new mongoose.Schema({
 
   // Profile information (shared across roles)
   profile: {
-    fullName: { type: String, required: true },
+    fullName: { type: String },
     phone: String,
-    address: String
+    address: String,
+    avatar: String
   },
 
   // Buyer-specific data (sellers also have this when acting as buyers)

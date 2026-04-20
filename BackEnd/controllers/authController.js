@@ -1,7 +1,10 @@
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { createNotification } = require("./notificationController");
+
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -69,7 +72,7 @@ exports.getMe = async (req, res) => {
 // Register User
 exports.register = async (req, res) => {
   try {
-    const { email, password, name, phone, role, businessName } = req.body;
+    const { email, password, name, username, phone } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -80,107 +83,63 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Determine if current request is from admin
-    const isAdminRequest = req.user && req.user.role === "admin";
-    
-    // Determine user status based on role and request type
-    let userStatus;
-    
-    if (isAdminRequest) {
-      // Admin-created users are always approved (admins, sellers, buyers)
-      userStatus = "approved";
-    } else {
-      // Regular registration: ALL users need manual approval
-      userStatus = "pending";
+    // Check username uniqueness if provided
+    if (username) {
+      const usernameExists = await User.findOne({ username });
+      if (usernameExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already taken",
+        });
+      }
     }
 
-    // Set activeRole based on actual role
-    let activeRole = role || "buyer";
+    // Determine if current request is from admin
+    const isAdminRequest = req.user && req.user.role === "admin";
 
-    // Create user with appropriate status and role data
+    // Regular registrations are always buyers and auto-approved
+    // Admin can still create users with specific roles via admin panel
+    const role = isAdminRequest ? (req.body.role || "buyer") : "buyer";
+    const userStatus = "approved";
+
     const user = await User.create({
       email,
       password,
-      role: role || "buyer",
-      activeRole: activeRole,
+      username: username || undefined,
+      role,
+      activeRole: "buyer",
       status: userStatus,
       profile: {
         fullName: name,
         phone,
       },
-      // Initialize empty data structures
       buyerData: {
         purchaseHistory: [],
         favoriteSellers: [],
         totalSpent: 0,
         cart: []
       },
-      ...(role === 'seller' && {
-        sellerData: {
-          businessName,
-          listings: [],
-          totalSales: 0,
-          totalEarnings: 0,
-          rating: 0,
-          reviewCount: 0,
-          isVerified: false,
-          bankDetails: {}
-        }
-      })
     });
 
-    // Generate token (only if user is approved)
-    let token = null;
-    if (user.status === "approved") {
-      token = generateToken(user);
-    }
+    const token = generateToken(user);
 
-    // Prepare response message based on status
-    let message = "Registration successful";
-    if (isAdminRequest) {
-      message = "User created and auto-approved by admin";
-    } else if (user.status === "pending") {
-      message = "Registration successful. Awaiting admin approval.";
-      
-      // Notify admins of new pending user
-      const admins = await User.find({ role: 'admin' });
-      for (const admin of admins) {
-        await createNotification(
-          admin._id,
-          'system',
-          'New User Registration',
-          `A new user ${user.email} (${user.role}) has registered and is awaiting approval.`,
-          '/admin/approvals',
-          user._id
-        );
-      }
-    } else {
-      message = "Registration successful. Account is now active.";
-    }
-
-    // Build user response for registration
     const userResponse = {
       id: user._id,
       email: user.email,
+      username: user.username,
       role: user.role,
       activeRole: user.activeRole,
       status: user.status,
       profile: user.profile,
-      canSwitchRoles: user.role === 'seller'
+      points: user.points || 0,
+      canSwitchRoles: false,
+      buyerData: user.buyerData,
     };
-
-    // Add initial data based on role
-    if (user.role === 'seller' && user.status === 'approved') {
-      userResponse.buyerData = user.buyerData;
-      userResponse.sellerData = user.sellerData;
-    } else if (user.role === 'buyer') {
-      userResponse.buyerData = user.buyerData;
-    }
 
     res.status(201).json({
       success: true,
-      message,
-      token, // Token will be null for pending sellers
+      message: "Registration successful. Welcome!",
+      token,
       user: userResponse,
     });
   } catch (error) {
@@ -216,10 +175,18 @@ exports.login = async (req, res) => {
     }
 
     // Check if account is approved
-    if (user.status !== "approved") {
+    if (user.status === "suspended") {
       return res.status(403).json({
         success: false,
-        message: "Account pending admin approval. Please wait for approval to access your account.",
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
+
+    // Seller pending check — buyers are always approved
+    if (user.role === 'seller' && user.status === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: "Your seller account is pending admin approval. You can still login as a buyer once approved.",
       });
     }
 
@@ -230,6 +197,7 @@ exports.login = async (req, res) => {
     const userResponse = {
       id: user._id,
       email: user.email,
+      username: user.username,
       role: user.role, // Actual role
       activeRole: user.activeRole, // Current active mode
       status: user.status,
@@ -265,7 +233,7 @@ exports.login = async (req, res) => {
 // Request to become a seller (BUYERS ONLY)
 exports.requestSellerRole = async (req, res) => {
   try {
-    const { businessName } = req.body;
+    const { businessName, phone, bankName, accountNumber, accountHolder } = req.body;
     const userId = req.user.id;
     const user = await User.findById(userId);
 
@@ -290,11 +258,17 @@ exports.requestSellerRole = async (req, res) => {
       });
     }
 
+    if (!businessName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Business name is required'
+      });
+    }
+
     // Update user role to pending seller
     user.role = 'seller';
     user.status = 'pending';
     user.activeRole = 'buyer'; // Keep them in buyer mode until approved
-    
     // Initialize seller data
     user.sellerData = {
       businessName,
@@ -304,8 +278,17 @@ exports.requestSellerRole = async (req, res) => {
       rating: 0,
       reviewCount: 0,
       isVerified: false,
-      bankDetails: {}
+      bankDetails: {
+        bankName: bankName || '',
+        accountNumber: accountNumber || '',
+        accountHolder: accountHolder || ''
+      }
     };
+
+    // Update phone if provided
+    if (phone) {
+      user.profile.phone = phone;
+    }
 
     await user.save();
 
@@ -463,5 +446,360 @@ exports.getCurrentUser = async (req, res) => {
       success: false,
       message: 'Server error fetching user data'
     });
+  }
+};
+
+// Register / Login with Google
+exports.googleLogin = async (req, res) => {
+
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Google ID token is required",
+      });
+    }
+
+    // Verify Google ID token
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    // Find user by googleId or email
+    let user = await User.findOne({ 
+      $or: [
+        { googleId },
+        { email }
+      ]
+    });
+
+    if (user) {
+      // If user exists but doesn't have googleId linked, link it now
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
+    } else {
+      // Create new user if not found
+      user = await User.create({
+        email,
+        googleId,
+        role: "buyer",
+        activeRole: "buyer",
+        status: "approved", // Auto-approve Google users since email is verified
+        profile: {
+          fullName: name,
+          avatar: picture // Ensure schema supports avatar or just skip
+        },
+        buyerData: {
+          purchaseHistory: [],
+          favoriteSellers: [],
+          totalSpent: 0,
+          cart: []
+        }
+      });
+    }
+
+    // Check if account is suspended
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    // Build user response
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      activeRole: user.activeRole,
+      status: user.status,
+      profile: user.profile,
+      points: user.points || 0,
+      canSwitchRoles: user.role === 'seller'
+    };
+
+    // Add role-specific data
+    if (user.role === 'seller') {
+      userResponse.buyerData = user.buyerData;
+      userResponse.sellerData = user.sellerData;
+    } else if (user.role === 'buyer') {
+      userResponse.buyerData = user.buyerData;
+    }
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: userResponse,
+      needsUsername: !user.username, // flag for frontend to prompt username setup
+      message: "Google login successful"
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during Google login",
+    });
+  }
+};
+
+// Register / Login with Facebook
+exports.facebookLogin = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Facebook access token is required",
+      });
+    }
+
+    // Verify Facebook access token
+    const fbResponse = await fetch(`https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email,picture`);
+    const fbData = await fbResponse.json();
+
+    if (fbData.error) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Facebook token",
+      });
+    }
+
+    const { id: facebookId, email, name, picture } = fbData;
+
+    // Find user by facebookId or email
+    let user = await User.findOne({ 
+      $or: [
+        { facebookId },
+        { email }
+      ]
+    });
+
+    if (user) {
+      // If user exists but doesn't have facebookId linked, link it now
+      if (!user.facebookId) {
+        user.facebookId = facebookId;
+        await user.save();
+      }
+    } else {
+      // Create new user if not found
+      user = await User.create({
+        email: email || `${facebookId}@facebook.com`, // Facebook doesn't always return email
+        facebookId,
+        role: "buyer",
+        activeRole: "buyer",
+        status: "approved", // Auto-approve Facebook users
+        profile: {
+          fullName: name,
+          avatar: picture?.data?.url
+        },
+        buyerData: {
+          purchaseHistory: [],
+          favoriteSellers: [],
+          totalSpent: 0,
+          cart: []
+        }
+      });
+    }
+
+    // Check if account is suspended
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    // Build user response
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      activeRole: user.activeRole,
+      status: user.status,
+      profile: user.profile,
+      points: user.points || 0,
+      canSwitchRoles: user.role === 'seller'
+    };
+
+    // Add role-specific data
+    if (user.role === 'seller') {
+      userResponse.buyerData = user.buyerData;
+      userResponse.sellerData = user.sellerData;
+    } else if (user.role === 'buyer') {
+      userResponse.buyerData = user.buyerData;
+    }
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: userResponse,
+      needsUsername: !user.username, // flag for frontend to prompt username setup
+      message: "Facebook login successful"
+    });
+  } catch (error) {
+    console.error("Facebook Login Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during Facebook login",
+    });
+  }
+};
+
+
+// Set username (for OAuth users who don't have one yet)
+exports.setUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+    const userId = req.user.id;
+
+    if (!username || username.trim().length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username must be at least 3 characters'
+      });
+    }
+
+    const trimmed = username.trim().toLowerCase();
+
+    const existing = await User.findOne({ username: trimmed });
+    if (existing && existing._id.toString() !== userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username already taken'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { username: trimmed },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      success: true,
+      message: 'Username set successfully',
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        activeRole: user.activeRole,
+        status: user.status,
+        profile: user.profile,
+        points: user.points || 0,
+        canSwitchRoles: user.role === 'seller'
+      }
+    });
+  } catch (error) {
+    console.error('Set username error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error setting username'
+    });
+  }
+};
+
+// Facebook OAuth callback — exchange code for access token then login
+exports.facebookCallback = async (req, res) => {
+  try {
+    const { code, redirectUri } = req.body;
+
+    if (!code || !redirectUri) {
+      return res.status(400).json({ success: false, message: 'Missing code or redirectUri' });
+    }
+
+    // Exchange code for access token
+    const tokenRes = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${process.env.FACEBOOK_APP_ID}&client_secret=${process.env.FACEBOOK_APP_SECRET}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+    );
+    const tokenData = await tokenRes.json();
+
+    if (tokenData.error) {
+      return res.status(400).json({ success: false, message: tokenData.error.message || 'Failed to exchange Facebook code' });
+    }
+
+    const accessToken = tokenData.access_token;
+
+    // Fetch user profile
+    const fbRes = await fetch(`https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email,picture`);
+    const fbData = await fbRes.json();
+
+    if (fbData.error) {
+      return res.status(400).json({ success: false, message: 'Failed to fetch Facebook profile' });
+    }
+
+    const { id: facebookId, email, name, picture } = fbData;
+
+    let user = await User.findOne({ $or: [{ facebookId }, { email }] });
+
+    if (user) {
+      if (!user.facebookId) {
+        user.facebookId = facebookId;
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        email: email || `${facebookId}@facebook.com`,
+        facebookId,
+        role: 'buyer',
+        activeRole: 'buyer',
+        status: 'approved',
+        profile: { fullName: name, avatar: picture?.data?.url },
+        buyerData: { purchaseHistory: [], favoriteSellers: [], totalSpent: 0, cart: [] }
+      });
+    }
+
+    if (user.status === 'suspended') {
+      return res.status(403).json({ success: false, message: 'Your account has been suspended. Please contact support.' });
+    }
+
+    const token = generateToken(user);
+
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      activeRole: user.activeRole,
+      status: user.status,
+      profile: user.profile,
+      points: user.points || 0,
+      canSwitchRoles: user.role === 'seller'
+    };
+
+    if (user.role === 'seller') {
+      userResponse.buyerData = user.buyerData;
+      userResponse.sellerData = user.sellerData;
+    } else {
+      userResponse.buyerData = user.buyerData;
+    }
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: userResponse,
+      needsUsername: !user.username,
+      message: 'Facebook login successful'
+    });
+  } catch (error) {
+    console.error('Facebook Callback Error:', error);
+    res.status(500).json({ success: false, message: 'Server error during Facebook login' });
   }
 };

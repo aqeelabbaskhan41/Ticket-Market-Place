@@ -64,6 +64,15 @@ export default function DashboardLayout({ children }) {
           {/* Main content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <DashboardHeader onToggleSidebar={() => setSidebarOpen(true)} />
+            {/* Pending seller approval banner */}
+            {user?.role === 'seller' && user?.status === 'pending' && (
+              <div className="flex items-center gap-3 px-4 py-2.5 text-sm" style={{ background: 'linear-gradient(90deg, rgba(234,179,8,0.15), rgba(234,179,8,0.08))', borderBottom: '1px solid rgba(234,179,8,0.25)' }}>
+                <span className="text-yellow-400 text-base">⏳</span>
+                <p className="text-yellow-200">
+                  Your seller account is <span className="font-semibold text-yellow-300">pending admin approval.</span> You can browse as a buyer in the meantime. Seller features will unlock once approved.
+                </p>
+              </div>
+            )}
             <main className="flex-1 overflow-auto p-4 relative">
               {children}
             </main>

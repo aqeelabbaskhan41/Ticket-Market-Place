@@ -190,75 +190,69 @@ function SidebarContent({ menuItems, role, handleLogout, isMobile, onClose }) {
         </ul>
 
         {/* 🔹 Role Switching Actions */}
-        <div className="mt-8 border-t border-white/10 pt-6 px-2 space-y-2">
-          <p className="px-4 text-[10px] font-bold uppercase tracking-wider text-blue-400/70 mb-2">Account Mode</p>
-          
-          {actualRole === 'buyer' && user?.status === 'approved' && (
-            <button
-              onClick={() => {
-                const businessName = prompt('Please enter your Business Name:');
-                if (businessName !== null) {
+        {role !== 'admin' && (
+          <div className="mt-8 border-t border-white/10 pt-6 px-2 space-y-2">
+            <p className="px-4 text-[10px] font-bold uppercase tracking-wider text-blue-400/70 mb-2">Account Mode</p>
+            
+            {actualRole === 'buyer' && user?.status === 'approved' && (
+              <button
+                onClick={() => {
+                  const businessName = prompt('Please enter your Business Name:');
+                  if (businessName !== null) {
+                    handleMenuItemClick();
+                    requestSellerRole(businessName);
+                  }
+                }}
+                className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 rounded-xl transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20">
+                  <FaStore className="h-4 w-4" />
+                </div>
+                Become a Seller
+              </button>
+            )}
+
+            {actualRole === 'seller' && isBuyer && (
+              <button
+                onClick={() => {
                   handleMenuItemClick();
-                  requestSellerRole(businessName);
-                }
-              }}
-              className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 rounded-xl transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20">
-                <FaStore className="h-4 w-4" />
-              </div>
-              Become a Seller
-            </button>
-          )}
+                  handleRoleSwitch('seller');
+                }}
+                className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 hover:text-green-300 rounded-xl transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20">
+                  <FaExchangeAlt className="h-4 w-4" />
+                </div>
+                Switch to Seller Mode
+              </button>
+            )}
 
-          {actualRole === 'seller' && isBuyer && (
-            <button
-              onClick={() => {
-                handleMenuItemClick();
-                handleRoleSwitch('seller');
-              }}
-              className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 hover:text-green-300 rounded-xl transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20">
-                <FaExchangeAlt className="h-4 w-4" />
-              </div>
-              Switch to Seller Mode
-            </button>
-          )}
+            {actualRole === 'seller' && isSeller && (
+              <button
+                onClick={() => {
+                  handleMenuItemClick();
+                  handleRoleSwitch('buyer');
+                }}
+                className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 rounded-xl transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20">
+                  <FaShoppingCart className="h-4 w-4" />
+                </div>
+                Switch to Buyer Mode
+              </button>
+            )}
 
-          {actualRole === 'seller' && isSeller && (
-            <button
-              onClick={() => {
-                handleMenuItemClick();
-                handleRoleSwitch('buyer');
-              }}
-              className="flex items-center gap-x-3 w-full px-4 py-2.5 text-sm font-semibold text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 rounded-xl transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20">
-                <FaShoppingCart className="h-4 w-4" />
+            {user?.status === 'pending' && actualRole === 'seller' && (
+              <div className="mx-4 mt-2 p-3 text-[10px] text-yellow-500 font-semibold bg-yellow-500/10 rounded-xl border border-yellow-500/20 leading-tight">
+                Seller account pending approval. You'll be notified once approved.
               </div>
-              Switch to Buyer Mode
-            </button>
-          )}
-
-          {user?.status === 'pending' && actualRole === 'seller' && (
-            <div className="mx-4 mt-2 p-3 text-[10px] text-yellow-500 font-semibold bg-yellow-500/10 rounded-xl border border-yellow-500/20 leading-tight">
-              Seller account pending approval. You'll be notified once approved.
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Bottom Section */}
       <div className="border-t border-white/20 pt-6 space-y-2 px-2">
-        <Link
-          href="/"
-          onClick={handleMenuItemClick}
-          className="flex items-center gap-x-3 px-4 py-2.5 text-sm font-semibold text-blue-200 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200"
-        >
-          <FaHome className="h-5 w-5 text-blue-300" />
-          Back to Home
-        </Link>
         <button
           onClick={() => {
             handleMenuItemClick();

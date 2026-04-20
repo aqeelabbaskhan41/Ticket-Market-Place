@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { FaTicketAlt, FaArrowRight, FaSpinner, FaCalendar, FaMapMarkerAlt, FaFutbol, FaSearch, FaClock, FaTrophy, FaExclamationCircle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
@@ -184,16 +185,8 @@ export default function Home() {
     }
   };
 
-  const handleActionClick = (matchId, action) => {
-    router.push(`/login?redirect=/matches/${matchId}/${action}`);
-  };
-
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-  };
-
-  const handleViewMatch = (matchId) => {
-    router.push(`/buyer/matches/${matchId}/tickets`);
   };
 
   return (
@@ -243,20 +236,20 @@ export default function Home() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                <button
-                  onClick={() => router.push('/register')}
+                <Link
+                  href="/register"
                   className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-12 rounded-xl transition-all duration-300 cursor-pointer shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 text-lg min-w-[200px] text-center border border-blue-400/30 group overflow-hidden"
                 >
                   <span className="relative z-10">Get Started</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </button>
-                <button
-                  onClick={() => router.push('/login')}
+                </Link>
+                <Link
+                  href="/login"
                   className="relative bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-12 rounded-xl transition-all duration-300 cursor-pointer shadow-2xl transform hover:-translate-y-1 text-lg min-w-[200px] text-center border border-white/20 backdrop-blur-sm group overflow-hidden"
                 >
                   <span className="relative z-10">Sign In</span>
                   <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-xl"></div>
-                </button>
+                </Link>
               </div>
 
               {/* Stats Section */}
@@ -460,30 +453,30 @@ export default function Home() {
 
                             {/* Action Buttons */}
                             <div className="flex gap-3 mb-3">
-                              <button
-                                onClick={() => handleActionClick(match._id, 'buy')}
+                              <Link
+                                href={`/login?redirect=/matches/${match._id}/buy`}
                                 className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group/btn shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                               >
                                 Buy Tickets
                                 <FaArrowRight className="text-sm group-hover/btn:translate-x-1 transition-transform" />
-                              </button>
-                              <button
-                                onClick={() => handleActionClick(match._id, 'sell')}
+                              </Link>
+                              <Link
+                                href={`/login?redirect=/matches/${match._id}/sell`}
                                 className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group/btn border border-white/20 backdrop-blur-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                               >
                                 Sell Tickets
                                 <FaArrowRight className="text-sm group-hover/btn:translate-x-1 transition-transform" />
-                              </button>
+                              </Link>
                             </div>
 
                             {/* View Details Button */}
-                            <button
-                              onClick={() => handleViewMatch(match._id)}
+                            <Link
+                              href={`/buyer/matches/${match._id}/tickets`}
                               className="w-full flex items-center justify-center gap-2 text-blue-300 hover:text-blue-200 transition-colors text-sm font-medium py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10"
                             >
                               <FaTicketAlt className="text-sm" />
                               <span>View Match Details</span>
-                            </button>
+                            </Link>
                           </div>
                         </div>
                       );
@@ -516,13 +509,13 @@ export default function Home() {
                 {/* View All Matches Button */}
                 {filteredMatches.length > 0 && (
                   <div className="text-center mt-12">
-                    <button
-                      onClick={() => router.push('/buyer/matches')}
+                    <Link
+                      href="/buyer/matches"
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-12 rounded-xl transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 text-lg border border-blue-400/30 inline-flex items-center gap-3"
                     >
                       View All Matches
                       <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    </Link>
                   </div>
                 )}
               </div>

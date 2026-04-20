@@ -2,6 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+
+// GLOBAL ERROR HANDLERS (for debugging)
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL: Uncaught Exception:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 const connectDB = require('./config/database');
 const userRoutes = require('./routes/userRoutes');
 const matchRoutes = require("./routes/matchRoutes.js");
@@ -76,6 +89,7 @@ app.listen(PORT, async () => {
     console.error('Failed to seed categories:', err);
   }
 
-  console.log(`Team logos: http://localhost:${PORT}/uploads/teamlogos/`);
-  console.log(`Match images: http://localhost:${PORT}/uploads/matches/`);
+  console.log(`✅ Server is now listening on port ${PORT}`);
+  console.log(`🔗 Team logos: http://localhost:${PORT}/uploads/teamlogos/`);
+  console.log(`🔗 Match images: http://localhost:${PORT}/uploads/matches/`);
 });

@@ -18,6 +18,7 @@ import {
 import { useRole } from '../../src/contexts/RoleContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import BecomeSellerModal from '../BecomeSellerModal';
 
 export default function DashboardHeader({ onToggleSidebar }) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -25,6 +26,8 @@ export default function DashboardHeader({ onToggleSidebar }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastNotificationId, setLastNotificationId] = useState(null);
+  const [greeting, setGreeting] = useState('Welcome');
+  const [showSellerModal, setShowSellerModal] = useState(false);
   
   const notificationRef = useRef(null);
   
@@ -32,24 +35,36 @@ export default function DashboardHeader({ onToggleSidebar }) {
     currentRole, 
     user, 
     handleRoleSwitch,
-    requestSellerRole,
     canSwitchRoles,
     isActualSeller,
     isActualBuyer,
-    logout 
+    logout,
+    refreshUser
   } = useRole();
   const router = useRouter();
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
   const handleBecomeSeller = () => {
-    const businessName = prompt('Please enter your Business Name:');
-    if (businessName !== null) {
-      requestSellerRole(businessName);
+    setShowSellerModal(true);
+  };
+
+  const handleRoleSwitchWithFeedback = async (newRole) => {
+    const result = await handleRoleSwitch(newRole);
+    if (result && !result.success) {
+      toast.warning(result.message, { autoClose: 5000 });
     }
   };
 
   useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) setGreeting('Good morning');
+      else if (hour < 18) setGreeting('Good afternoon');
+      else setGreeting('Good evening');
+    };
+
+    updateGreeting();
     fetchNotifications(true);
     // Poll for notifications every 30 seconds (made it faster)
     const interval = setInterval(() => fetchNotifications(false), 30000);
@@ -142,13 +157,6 @@ export default function DashboardHeader({ onToggleSidebar }) {
     }
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   const handleLogout = () => {
     logout();
   };
@@ -171,6 +179,16 @@ export default function DashboardHeader({ onToggleSidebar }) {
 
   return (
     <header className="sticky top-0 z-50 flex flex-wrap items-center justify-between h-auto border-b border-white/20 bg-white/10 backdrop-blur-xl px-4 py-3 sm:px-6 lg:px-8">
+      {showSellerModal && (
+        <BecomeSellerModal
+          onClose={() => setShowSellerModal(false)}
+          onSuccess={() => {
+            setShowSellerModal(false);
+            toast.success('Seller request submitted! Awaiting admin approval.');
+            refreshUser();
+          }}
+        />
+      )}
       {/* 🔹 Left: Menu & Logo */}
       <div className="flex items-center gap-3">
         {/* Mobile menu button */}
@@ -195,7 +213,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
       {/* 🔹 Middle: Greeting & Role Info */}
       <div className="hidden md:flex flex-col items-start">
         <h1 className="text-base sm:text-lg font-semibold text-white">
-          {getGreeting()}
+          {greeting}
           {user ? `, ${user.profile?.fullName || 'User'}!` : '!'}
         </h1>
         <div className="flex items-center gap-2">
@@ -216,7 +234,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
         {canSwitchRoles && (
           <div className="relative group">
             <button
-              onClick={() => handleRoleSwitch(currentRole === 'seller' ? 'buyer' : 'seller')}
+              onClick={() => handleRoleSwitchWithFeedback(currentRole === 'seller' ? 'buyer' : 'seller')}
               className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-300 border ${
                 currentRole === 'seller' 
                   ? "bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30" 
@@ -362,7 +380,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
                     </div>
                     {currentRole === 'seller' ? (
                       <button 
-                        onClick={() => handleRoleSwitch('buyer')}
+                        onClick={() => handleRoleSwitchWithFeedback('buyer')}
                         className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 flex items-center transition"
                       >
                         <FaShoppingCart className="mr-2 h-4 w-4 text-green-400" />
@@ -373,7 +391,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
                       </button>
                     ) : (
                       <button 
-                        onClick={() => handleRoleSwitch('seller')}
+                        onClick={() => handleRoleSwitchWithFeedback('seller')}
                         className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 flex items-center transition"
                       >
                         <FaStore className="mr-2 h-4 w-4 text-yellow-400" />

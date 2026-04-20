@@ -214,33 +214,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         </div>
       </div>
 
-      {/* Commission Summary */}
-      <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-yellow-400/30 mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-2">Commission Summary</h3>
-            <p className="text-3xl font-bold text-white">
-              {dashboardData.commissionEarned?.toLocaleString() || 0} points
-            </p>
-            <p className="text-yellow-200 text-sm mt-1">
-              Total commission earned from {dashboardData.totalTransactions || 0} transactions
-            </p>
-          </div>
-          <div className="flex flex-col sm:items-end gap-2">
-            <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-              <p className="text-green-400 text-sm font-semibold">
-                {dashboardData.platformCommissionRate || 10}% Commission Rate
-              </p>
-            </div>
-            <div className="bg-white/10 rounded-lg p-3 border border-white/20">
-              <p className="text-blue-400 text-sm font-semibold">
-                Success Rate: {dashboardData.successRate || 0}%
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Actions */}
       <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 mb-6 sm:mb-8">
         <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Quick Actions</h2>

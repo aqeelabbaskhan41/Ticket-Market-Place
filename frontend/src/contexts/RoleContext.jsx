@@ -19,10 +19,14 @@ export function RoleProvider({ children }) {
 
   const handleRoleSwitch = async (newRole) => {
     try {
-      // Only proceed if user is a seller
       if (!user || user.role !== 'seller') {
         console.error('Only sellers can switch roles');
-        return;
+        return { success: false, message: 'Only sellers can switch roles' };
+      }
+
+      // Block switching to seller mode if still pending approval
+      if (newRole === 'seller' && user.status === 'pending') {
+        return { success: false, message: 'Your seller account is pending admin approval. You cannot switch to seller mode yet.' };
       }
 
       const token = localStorage.getItem('token');
@@ -37,7 +41,6 @@ export function RoleProvider({ children }) {
         body: JSON.stringify({ role: newRole })
       });
 
-      // Check if response is OK before parsing JSON
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -45,32 +48,19 @@ export function RoleProvider({ children }) {
       const data = await response.json();
 
       if (data.success) {
-        // Update both user data and token
         setUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
-        
-        // Reload to apply changes
         window.location.reload();
-      } else {
-        console.error('Role switch failed:', data.message);
-        alert(data.message);
       }
+      return data;
     } catch (error) {
       console.error('Role switch error:', error);
-      
-      // More specific error messages
-      if (error.message.includes('404')) {
-        alert('Role switching endpoint not found. Please check if the backend server is running.');
-      } else if (error.message.includes('JSON')) {
-        alert('Invalid response from server. The backend might be returning an HTML error page.');
-      } else {
-        alert('Error switching roles. Please try again.');
-      }
+      return { success: false, message: 'Error switching roles. Please try again.' };
     }
   };
 
-  const requestSellerRole = async (businessName) => {
+  const requestSellerRole = async (sellerDetails) => {
     try {
       const token = localStorage.getItem('token');
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
@@ -81,26 +71,20 @@ export function RoleProvider({ children }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ businessName })
+        body: JSON.stringify(sellerDetails)
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
 
       if (data.success) {
         setUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
-        alert(data.message);
-        window.location.reload();
-      } else {
-        alert(data.message);
       }
+
+      return data;
     } catch (error) {
       console.error('Request seller role error:', error);
-      alert('Error requesting seller role. Please try again.');
+      return { success: false, message: 'Network error. Please try again.' };
     }
   };
 

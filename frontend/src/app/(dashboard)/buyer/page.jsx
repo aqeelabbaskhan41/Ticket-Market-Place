@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaCoins, FaShoppingCart, FaHistory, FaUser, FaTicketAlt, FaSearch, FaFire, FaSyncAlt } from 'react-icons/fa';
+import { FaCoins, FaShoppingCart, FaHistory, FaUser, FaTicketAlt, FaSearch, FaFire, FaSyncAlt, FaStore, FaClock } from 'react-icons/fa';
+import BecomeSellerModal from '../../../../components/BecomeSellerModal';
 
 export default function BuyerDashboard() {
   const router = useRouter();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showSellerModal, setShowSellerModal] = useState(false);
+  const [sellerRequestSent, setSellerRequestSent] = useState(false);
   const [stats, setStats] = useState({
     points: 0,
     activeOrders: 0,
@@ -47,6 +50,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         activeOrders: data.user.activeOrders || 0,
         purchaseHistory: data.user.purchaseHistory || 0
       });
+      // If user already submitted a seller request (role=seller, status=pending)
+      if (data.user.role === 'seller' && data.user.status === 'pending') {
+        setSellerRequestSent(true);
+      }
 
     } catch (err) {
       setError(err.message);
@@ -115,6 +122,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   return (
     <div className="p-4 sm:p-6">
+      {showSellerModal && (
+        <BecomeSellerModal
+          onClose={() => setShowSellerModal(false)}
+          onSuccess={() => {
+            setShowSellerModal(false);
+            setSellerRequestSent(true);
+          }}
+        />
+      )}
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between">
@@ -184,7 +200,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       {/* Quick Actions */}
       <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 mb-6 sm:mb-8">
         <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <button 
             className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-blue-400/50 hover:bg-blue-500/20 transition-all duration-200 group"
             onClick={() => router.push('/buyer/matches')}
@@ -204,54 +220,41 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
             </div>
             <span className="font-semibold text-white text-sm sm:text-base">My Tickets</span>
           </button>
-
-          <button 
-            className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-yellow-400/50 hover:bg-yellow-500/20 transition-all duration-200 group"
-            onClick={() => router.push('/buyer/topup')}
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-500/30 transition-colors duration-200 border border-blue-400/30">
-              <FaCoins className="text-sm sm:text-base text-yellow-400 group-hover:text-yellow-300" />
-            </div>
-            <span className="font-semibold text-white text-sm sm:text-base">Get More Points</span>
-          </button>
-
-          <button 
-            className="flex items-center p-3 sm:p-4 border border-white/20 rounded-xl hover:border-purple-400/50 hover:bg-purple-500/20 transition-all duration-200 group"
-            onClick={() => router.push('/buyer/history')}
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3 group-hover:bg-purple-500/30 transition-colors duration-200 border border-purple-400/30">
-              <FaHistory className="text-sm sm:text-base text-purple-400 group-hover:text-purple-300" />
-            </div>
-            <span className="font-semibold text-white text-sm sm:text-base">Order History</span>
-          </button>
         </div>
       </div>
 
-      {/* Featured Events */}
-      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-white">Featured Events</h2>
-          <div className="flex items-center text-yellow-400">
-            <FaFire className="mr-2" />
-            <span className="text-sm font-semibold">Hot Deals</span>
+      {/* Become a Seller */}
+      {userData?.role !== 'seller' && (
+        <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-blue-400/30 mb-6 sm:mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-500/30 rounded-xl flex items-center justify-center border border-blue-400/30">
+                <FaStore className="text-blue-300 text-xl" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-base sm:text-lg">Want to sell tickets?</h3>
+                <p className="text-blue-200 text-sm">
+                  {sellerRequestSent
+                    ? 'Your seller request is under review by admin.'
+                    : 'Submit a request to become a seller and start listing tickets.'}
+                </p>
+              </div>
+            </div>
+            {sellerRequestSent ? (
+              <div className="flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/30 text-yellow-300 px-4 py-2 rounded-lg text-sm">
+                <FaClock className="text-sm" /> Pending Approval
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSellerModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition text-sm whitespace-nowrap"
+              >
+                Become a Seller
+              </button>
+            )}
           </div>
         </div>
-        
-        <div className="text-center py-8">
-          <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-400/30">
-            <FaTicketAlt className="text-2xl text-blue-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No Featured Events</h3>
-          <p className="text-blue-200 mb-4">Check back later for exciting matches and events</p>
-          <button 
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold inline-flex items-center gap-2 transition-all duration-200"
-            onClick={() => router.push('/buyer/matches')}
-          >
-            <FaSearch />
-            Browse All Events
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Recent Activity */}
       <div className="mt-6 sm:mt-8 bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20">
