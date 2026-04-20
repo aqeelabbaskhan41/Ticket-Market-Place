@@ -46,3 +46,5 @@ Thumbs.db
 # Uploaded files (already handled by backend to store in /BackEnd/uploads)
 # It's important NOT to commit uploaded user files to git
 /BackEnd/uploads/
+cred.txt
+.env
