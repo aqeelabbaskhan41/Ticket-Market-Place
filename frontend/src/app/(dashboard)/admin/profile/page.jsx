@@ -234,11 +234,7 @@ const AdminProfilePage = () => {
               Member Since
             </label>
             <div className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white">
-              {new Date(user.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+              {(() => { const d = new Date(user.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
             </div>
           </div>
         </div>

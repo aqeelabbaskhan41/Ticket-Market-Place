@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaTimes, FaCloudUploadAlt, FaMobileAlt, FaTicketAlt, FaTruck, FaMapMarkerAlt } from 'react-icons/fa';
 
 export default function DeliveryModal({ isOpen, onClose, ticket, onDeliver }) {
   const [loading, setLoading] = useState(false);
+  const [delivered, setDelivered] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [files, setFiles] = useState([]);
   
   // Mobile Link State
@@ -36,7 +38,21 @@ export default function DeliveryModal({ isOpen, onClose, ticket, onDeliver }) {
     collectionTime: ''
   });
 
+  // Reset state when a new ticket is opened
+  useEffect(() => {
+    if (!ticket?._id) return;
+    setDelivered(false);
+    setSubmitError('');
+    setFiles([]);
+    setMobileLinks({ type: 'general', general: '', ios: '', android: '' });
+    setAppLogin({ username: '', password: '', notes: '' });
+    setPostal({ trackingNumber: '', courierName: '' });
+    setCollection({ contactPerson: '', contactPhone: '', collectionLocation: '', collectionTime: '' });
+  }, [ticket?._id]);
+
   if (!isOpen || !ticket) return null;
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- removed duplicate
 
   const handleFileChange = (e) => {
     if (e.target.files) {
@@ -51,7 +67,7 @@ export default function DeliveryModal({ isOpen, onClose, ticket, onDeliver }) {
     const formData = new FormData();
     formData.append('deliveryMethod', ticket.deliveryMethod || 'E-Ticket (PDF)');
 
-    if (ticket.deliveryMethod === 'E-Ticket (PDF)' || ticket.deliveryMethod === 'Image Ticket' || !ticket.deliveryMethod) { // Default to PDF if not specified
+    if (ticket.deliveryMethod === 'E-Ticket (PDF)' || ticket.deliveryMethod === 'Image Ticket' || !ticket.deliveryMethod) {
       files.forEach(file => {
         formData.append('files', file);
       });
@@ -78,10 +94,10 @@ export default function DeliveryModal({ isOpen, onClose, ticket, onDeliver }) {
 
     try {
       await onDeliver(ticket._id, formData);
-      onClose();
+      setDelivered(true);
     } catch (error) {
       console.error('Submission error:', error);
-      alert('Failed to submit delivery');
+      setSubmitError(error.message || 'Failed to submit delivery. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -357,42 +373,64 @@ export default function DeliveryModal({ isOpen, onClose, ticket, onDeliver }) {
           </button>
         </div>
 
-        {/* Content */}
-        <form onSubmit={handleSubmit}>
-          <div className="p-6 max-h-[70vh] overflow-y-auto">
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider block mb-1">Method</span>
-              <span className="text-lg text-white font-medium">{ticket.deliveryMethod || 'E-Ticket (PDF)'}</span>
+        {/* Success screen */}
+        {delivered ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-400/30">
+              <FaTicketAlt className="text-2xl text-green-400" />
             </div>
-            
-            {renderContent()}
-          </div>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+            <h3 className="text-xl font-bold text-white mb-2">Delivery Submitted!</h3>
+            <p className="text-blue-200 mb-6">The buyer has been notified and can now access their tickets.</p>
             <button
-              type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg font-medium transition-all"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg font-medium shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Submitting...
-                </>
-              ) : (
-                'Submit Delivery'
-              )}
+              Done
             </button>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider block mb-1">Method</span>
+                <span className="text-lg text-white font-medium">{ticket.deliveryMethod || 'E-Ticket (PDF)'}</span>
+              </div>
+
+              {submitError && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-300 text-sm">
+                  {submitError}
+                </div>
+              )}
+              
+              {renderContent()}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg font-medium shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Delivery'
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -404,7 +404,7 @@ export default function TeamsManagement() {
                     <h3 className="font-semibold text-white text-lg">{team.name}</h3>
                     <div className="flex items-center gap-3 text-blue-200 text-sm mt-1">
                       <span>
-                        Created {new Date(team.createdAt).toLocaleDateString()}
+                        Created {(() => { const d = new Date(team.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                       </span>
                       {team.logo && (
                         <span className="bg-blue-500/20 px-2 py-0.5 rounded-full text-xs border border-blue-400/30">

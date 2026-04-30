@@ -226,7 +226,7 @@ export default function CreateListing() {
           <option value="" className="text-gray-900">Select Match</option>
           {matches.map(m => (
             <option key={m._id} value={m._id} className="text-gray-900">
-              {m.homeTeam} vs {m.awayTeam} - {new Date(m.date).toLocaleDateString()} - {getVenueName(m)}
+              {m.homeTeam} vs {m.awayTeam} - {(() => { const d = new Date(m.date); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()} - {getVenueName(m)}
             </option>
           ))}
         </select>
@@ -248,7 +248,7 @@ export default function CreateListing() {
                   ) : (
                     <FaTrophy className="text-blue-400" />
                   )}
-                  {new Date(selectedMatchData.date).toLocaleDateString()} • {selectedMatchData.time}
+                  {(() => { const d = new Date(selectedMatchData.date); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()} • {selectedMatchData.time}
                 </p>
                 <p className="text-blue-300 text-xs">
                   Venue: {getVenueName(selectedMatchData)}
@@ -337,8 +337,7 @@ export default function CreateListing() {
                 required
               >
                 <option value="" className="text-gray-900">Select Category</option>
-                {categories
-                  .filter(c => !selectedMatch || sectionImages[c]) // Filter: only show sections with admin-uploaded images if match selected
+                {(selectedMatch ? Object.keys(sectionImages) : categories)
                   .map(c => (
                   <option key={c} value={c} className="text-gray-900">
                     {c} {sectionImages[c] ? '📷' : ''}

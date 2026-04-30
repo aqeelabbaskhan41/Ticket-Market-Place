@@ -2,6 +2,7 @@ const Match = require("../models/Match.js");
 const Team = require("../models/Team.js");
 const Venue = require("../models/Venue.js");
 const Competition = require("../models/Competition.js");
+const TicketListing = require("../models/TicketListing.js");
 const fs = require('fs');
 const path = require('path');
 
@@ -138,8 +139,37 @@ const getAllMatches = async (req, res) => {
       })
     );
 
+    // Compute live listing/ticket counts from TicketListing collection
+    const matchIds = matchesWithTeams.map(m => m._id);
+    const listingAgg = await TicketListing.aggregate([
+      { $match: { match: { $in: matchIds }, status: 'active', quantity: { $gt: 0 } } },
+      {
+        $group: {
+          _id: '$match',
+          totalListings: { $sum: 1 },
+          totalTickets: { $sum: '$quantity' },
+        },
+      },
+    ]);
+
+    // Build a lookup map: matchId -> { totalListings, totalTickets }
+    const countMap = {};
+    listingAgg.forEach(row => {
+      countMap[row._id.toString()] = {
+        totalListings: row.totalListings,
+        totalTickets: row.totalTickets,
+      };
+    });
+
+    // Merge live counts into each match
+    const matchesWithCounts = matchesWithTeams.map(m => ({
+      ...m,
+      totalListings: countMap[m._id.toString()]?.totalListings ?? 0,
+      totalTickets: countMap[m._id.toString()]?.totalTickets ?? 0,
+    }));
+
     console.log('Sending matches response');
-    res.status(200).json(matchesWithTeams);
+    res.status(200).json(matchesWithCounts);
   } catch (error) {
     console.error("Error fetching matches:", error);
     logErrorToFile(error);
@@ -192,14 +222,32 @@ const getMatchById = async (req, res) => {
       }
     }
 
+    // Compute live ticket stats from TicketListing collection
+    const listingStats = await TicketListing.aggregate([
+      { $match: { match: match._id, status: 'active', quantity: { $gt: 0 } } },
+      {
+        $group: {
+          _id: null,
+          totalListings: { $sum: 1 },
+          totalTickets: { $sum: '$quantity' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+    ]);
+
+    const stats = listingStats[0] || {};
+    matchObj.totalListings = stats.totalListings ?? 0;
+    matchObj.totalTickets  = stats.totalTickets  ?? 0;
+    matchObj.minPrice      = stats.minPrice      ?? 0;
+    matchObj.maxPrice      = stats.maxPrice      ?? 0;
+
     res.status(200).json(matchObj);
   } catch (error) {
     console.error("Error fetching match:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// Update match
 const updateMatch = async (req, res) => {
   try {
     const match = await Match.findById(req.params.id);

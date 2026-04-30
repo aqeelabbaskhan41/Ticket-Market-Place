@@ -190,21 +190,17 @@ const addOrUpdateSection = async (req, res) => {
       return res.status(404).json({ message: "Venue not found" });
     }
 
-    // Validate section name is from allowed categories
-    const allowedSections = [
-      "Central Longside Lower",
-      "Longside Lower",
-      "Shortside Lower",
-      "Central Longside Upper",
-      "Longside Upper",
-      "Shortside Upper",
-      "Away Section",
-      "VIP Packages"
-    ];
+    // Validate section name against the dynamic SeatCategory collection
+    const SeatCategory = require('../models/SeatCategory');
+    const categoryExists = await SeatCategory.findOne({
+      name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+    });
 
-    if (!allowedSections.includes(name)) {
+    if (!categoryExists) {
+      const allCategories = await SeatCategory.find().select('name').sort({ name: 1 });
+      const categoryNames = allCategories.map(c => c.name).join(', ');
       return res.status(400).json({
-        message: "Invalid section name. Must be one of: " + allowedSections.join(', ')
+        message: `Invalid section name. Must be one of: ${categoryNames}`
       });
     }
 

@@ -86,27 +86,22 @@ export default function SalesHistory() {
   }, [sales, searchParams]);
 
   const handleDeliverTicket = async (ticketId, formData) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/delivery/deliver/${ticketId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData // Content-Type is set automatically for FormData
-      });
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/delivery/deliver/${ticketId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
 
-      if (response.ok) {
-        alert('Ticket delivered successfully!');
-        fetchSales(); // Refresh the list
-      } else {
-        const err = await response.json();
-        alert(err.message || 'Failed to deliver ticket');
-      }
-    } catch (error) {
-      console.error('Delivery error:', error);
-      alert('Error delivering ticket');
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to deliver ticket');
     }
+
+    // Refresh sales list after successful delivery
+    fetchSales();
   };
 
   const filteredSales = sales.filter(sale => 
@@ -324,7 +319,7 @@ export default function SalesHistory() {
                     {/* Additional status info can go here */}
                   </td>
                   <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {new Date(sale.purchaseDate).toLocaleDateString()}
+                    {(() => { const d = new Date(sale.purchaseDate); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                   </td>
                   <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">

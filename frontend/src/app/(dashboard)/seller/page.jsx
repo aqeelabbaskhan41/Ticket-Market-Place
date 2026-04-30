@@ -280,7 +280,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                   <div className="flex items-center gap-2 mt-1">
                     {getStatusBadge(sale.status)}
                     <p className="text-blue-300 text-xs">
-                      {sale.purchaseDate ? new Date(sale.purchaseDate).toLocaleDateString() : 'Recent'}
+                      {sale.purchaseDate ? (() => { const d = new Date(sale.purchaseDate); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })() : 'Recent'}
                     </p>
                   </div>
                 </div>

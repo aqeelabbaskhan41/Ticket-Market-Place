@@ -327,8 +327,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       if (!res.ok) {
         throw new Error(responseData.message || 'Failed to duplicate listing');
       }
-      
-      setListings(prev => [responseData, ...prev]);
+
+      // The API returns the new ticket with match as a bare ID.
+      // Restore the populated match object from the original listing so the
+      // grouped view can display the match name immediately without a refetch.
+      const newListing = {
+        ...responseData,
+        match: listing.match,
+      };
+
+      setListings(prev => [newListing, ...prev]);
       
     } catch (err) {
       alert(`Error duplicating listing: ${err.message}`);
@@ -556,216 +564,294 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
         </div>
       </div>
 
-      {/* Listings Table - Everything below remains exactly the same */}
-      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-white">Your Listings</h2>
-          <span className="text-blue-200 text-sm">
-            {filteredListings.length} listing{filteredListings.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+      {/* Match-grouped listings */}
+      <MatchGroupedListings
+        filteredListings={filteredListings}
+        listings={listings}
+        editingId={editingId}
+        editForm={editForm}
+        saveLoading={saveLoading}
+        categories={categories}
+        restrictions={restrictions}
+        handleEditChange={handleEditChange}
+        startEdit={startEdit}
+        cancelEdit={cancelEdit}
+        saveEdit={saveEdit}
+        duplicateListing={duplicateListing}
+        handleDelete={handleDelete}
+        getStatusBadge={getStatusBadge}
+        getRestrictionBadge={getRestrictionBadge}
+        router={router}
+      />
+    </div>
+  );
+}
 
-        {filteredListings.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-blue-200">No listings found matching your criteria.</p>
-            {listings.length === 0 && (
-              <button
-                onClick={() => router.push('/seller/listings/create')}
-                className="mt-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold inline-flex items-center gap-2 transition-all duration-200"
-              >
-                <FaPlus /> Create Your First Listing
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/20">
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Match</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Category</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Block/Area</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Restriction</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Qty</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Price</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Status</th>
-                  <th className="text-left py-3 px-4 text-blue-200 font-semibold text-sm">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredListings.map((listing) => (
-                  <tr key={listing._id} className="border-b border-white/10 hover:bg-white/5">
-                    {/* Match */}
-                    <td className="py-3 px-4 text-white text-sm">
-                      <div className="flex items-center gap-2">
-                        <FaCalendarAlt className="text-blue-400 text-xs" />
-                        <div>
-                          <div className="font-medium">{listing.match?.homeTeam} vs {listing.match?.awayTeam}</div>
-                          <div className="text-blue-300 text-xs">
-                            {listing.match?.date ? new Date(listing.match.date).toLocaleDateString() : 'Date TBD'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    {/* Category */}
-                    <td className="py-3 px-4 text-white text-sm">
-                      {editingId === listing._id ? (
-                        <select 
-                          value={editForm.category} 
-                          onChange={(e) => handleEditChange('category', e.target.value)}
-                          className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="" className="text-gray-900">Select Category</option>
-                          {categories.map(c => <option key={c} value={c} className="text-gray-900">{c}</option>)}
-                        </select>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <FaTicketAlt className="text-green-400 text-xs" />
-                          {listing.category}
-                        </div>
-                      )}
-                    </td>
-                    
-                    {/* Block/Area */}
-                    <td className="py-3 px-4 text-white text-sm">
-                      {editingId === listing._id ? (
-                        <input 
-                          type="text" 
-                          value={editForm.blockArea} 
-                          onChange={(e) => handleEditChange('blockArea', e.target.value)}
-                          className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
-                          placeholder="Enter block/area"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <FaMapMarkerAlt className="text-yellow-400 text-xs" />
-                          {listing.blockArea}
-                        </div>
-                      )}
-                    </td>
-                    
-                    {/* Restriction */}
-                    <td className="py-3 px-4 text-white text-sm">
-                      {editingId === listing._id ? (
-                        <select 
-                          value={editForm.restriction} 
-                          onChange={(e) => handleEditChange('restriction', e.target.value)}
-                          className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
-                        >
-                          {restrictions.map(r => <option key={r} value={r} className="text-gray-900">{r}</option>)}
-                        </select>
-                      ) : (
-                        getRestrictionBadge(listing.restriction || 'Clear View')
-                      )}
-                    </td>
-                    
-                    {/* Quantity */}
-                    <td className="py-3 px-4 text-white text-sm">
-                      {editingId === listing._id ? (
-                        <input 
-                          type="number" 
-                          value={editForm.quantity} 
-                          onChange={(e) => handleEditChange('quantity', parseInt(e.target.value) || 1)}
-                          className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
-                          min={1}
-                        />
-                      ) : (
-                        <div className="text-center">
-                          <div className="font-semibold">{listing.quantity}</div>
-                          {listing.originalQuantity && listing.originalQuantity > listing.quantity && (
-                            <div className="text-green-400 text-xs">
-                              -{listing.originalQuantity - listing.quantity} sold
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    
-                    {/* Price */}
-                    <td className="py-3 px-4 text-white text-sm font-semibold">
-                      {editingId === listing._id ? (
-                        <input 
-                          type="number" 
-                          value={editForm.price} 
-                          onChange={(e) => handleEditChange('price', parseFloat(e.target.value) || 0)}
-                          className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
-                          min={0}
-                          step="0.01"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <FaCoins className="text-yellow-400 text-xs" />
-                          {listing.price} pts
-                        </div>
-                      )}
-                    </td>
-                    
-                    {/* Status */}
-                    <td className="py-3 px-4">
-                      {getStatusBadge(listing.status)}
-                    </td>
-                    
-                    {/* Actions */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {editingId === listing._id ? (
-                          <>
-                            <button
-                              onClick={() => saveEdit(listing._id)}
-                              disabled={saveLoading}
-                              className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Save"
-                            >
-                              {saveLoading ? (
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-400"></div>
-                              ) : (
-                                <FaCheck size={14} />
-                              )}
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              disabled={saveLoading}
-                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors disabled:opacity-50"
-                              title="Cancel"
-                            >
-                              <FaTimes size={14} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => startEdit(listing)}
-                              className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
-                              title="Edit"
-                            >
-                              <FaEdit size={14} />
-                            </button>
-                            <button
-                              onClick={() => duplicateListing(listing)}
-                              className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded transition-colors"
-                              title="Duplicate"
-                            >
-                              <FaCopy size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(listing._id)}
-                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
-                              title="Delete"
-                            >
-                              <FaTrash size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+// ─── Match-grouped view ───────────────────────────────────────────────────────
+
+function MatchGroupedListings({
+  filteredListings, listings, editingId, editForm, saveLoading,
+  categories, restrictions, handleEditChange,
+  startEdit, cancelEdit, saveEdit, duplicateListing, handleDelete,
+  getStatusBadge, getRestrictionBadge, router,
+}) {
+  const [collapsed, setCollapsed] = useState({});
+
+  // Group listings by match ID
+  const groups = filteredListings.reduce((acc, listing) => {
+    const matchId = listing.match?._id || 'unknown';
+    if (!acc[matchId]) acc[matchId] = { match: listing.match, listings: [] };
+    acc[matchId].listings.push(listing);
+    return acc;
+  }, {});
+
+  // Sort groups by match date ascending
+  const sortedGroups = Object.entries(groups).sort(([, a], [, b]) => {
+    const da = a.match?.date ? new Date(a.match.date) : new Date(0);
+    const db = b.match?.date ? new Date(b.match.date) : new Date(0);
+    return da - db;
+  });
+
+  const toggle = (matchId) =>
+    setCollapsed(prev => ({ ...prev, [matchId]: !prev[matchId] }));
+
+  const fmtDate = (dateStr) => {
+    if (!dateStr) return 'Date TBD';
+    const d = new Date(dateStr);
+    return `${d.getDate()}/${d.toLocaleDateString('en-GB', { month: 'short' })}/${d.getFullYear()}`;
+  };
+
+  if (filteredListings.length === 0) {
+    return (
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-8 border border-white/20 text-center">
+        <p className="text-blue-200">No listings found matching your criteria.</p>
+        {listings.length === 0 && (
+          <button
+            onClick={() => router.push('/seller/listings/create')}
+            className="mt-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold inline-flex items-center gap-2 transition-all duration-200"
+          >
+            <FaPlus /> Create Your First Listing
+          </button>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {sortedGroups.map(([matchId, group]) => {
+        const isCollapsed = collapsed[matchId];
+        const activeCount = group.listings.filter(l => l.status === 'active').length;
+        const match = group.match;
+
+        return (
+          <div key={matchId} className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-lg">
+            {/* Match header */}
+            <div
+              className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-white/5 transition-colors"
+              style={{ borderBottom: isCollapsed ? 'none' : '1px solid rgba(255,255,255,0.1)' }}
+              onClick={() => toggle(matchId)}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Collapse chevron */}
+                <span className={`text-blue-300 text-xs transition-transform ${isCollapsed ? '-rotate-90' : ''}`}>▼</span>
+
+                <div className="min-w-0">
+                  <div className="text-white font-bold text-sm sm:text-base truncate">
+                    {match?.homeTeam ?? '—'} vs {match?.awayTeam ?? '—'}
+                  </div>
+                  <div className="text-blue-300 text-xs mt-0.5">
+                    {match?.competition && <span className="font-medium">{match.competition}</span>}
+                    {match?.competition && ' · '}
+                    {fmtDate(match?.date)}
+                    {match?.time && ` ${match.time.substring(0, 5)}`}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                <span className="text-blue-200 text-xs whitespace-nowrap">
+                  {activeCount} active · {group.listings.length} total
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); router.push('/seller/listings/create'); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                  title="Add listing for this match"
+                >
+                  <FaPlus size={10} />
+                </button>
+              </div>
+            </div>
+
+            {/* Listings table */}
+            {!isCollapsed && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-white/5">
+                      <th className="text-left py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Category</th>
+                      <th className="text-left py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Block / Area</th>
+                      <th className="text-left py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Restriction</th>
+                      <th className="text-center py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Qty</th>
+                      <th className="text-right py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Price</th>
+                      <th className="text-left py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Split</th>
+                      <th className="text-left py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide">Status</th>
+                      <th className="py-2 px-4 text-blue-300 font-semibold text-xs uppercase tracking-wide text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.listings.map((listing, idx) => (
+                      <tr
+                        key={listing._id}
+                        className={`border-t border-white/10 hover:bg-white/5 transition-colors ${idx % 2 === 0 ? '' : 'bg-white/[0.02]'}`}
+                      >
+                        {/* Category */}
+                        <td className="py-3 px-4 text-white">
+                          {editingId === listing._id ? (
+                            <select
+                              value={editForm.category}
+                              onChange={(e) => handleEditChange('category', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="" className="text-gray-900">Select</option>
+                              {categories.map(c => <option key={c} value={c} className="text-gray-900">{c}</option>)}
+                            </select>
+                          ) : (
+                            <span className="font-medium">{listing.category}</span>
+                          )}
+                        </td>
+
+                        {/* Block/Area */}
+                        <td className="py-3 px-4 text-blue-200">
+                          {editingId === listing._id ? (
+                            <input
+                              type="text"
+                              value={editForm.blockArea}
+                              onChange={(e) => handleEditChange('blockArea', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
+                              placeholder="Block/Area"
+                            />
+                          ) : (
+                            listing.blockArea
+                          )}
+                        </td>
+
+                        {/* Restriction */}
+                        <td className="py-3 px-4">
+                          {editingId === listing._id ? (
+                            <select
+                              value={editForm.restriction}
+                              onChange={(e) => handleEditChange('restriction', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:ring-1 focus:ring-blue-500"
+                            >
+                              {restrictions.map(r => <option key={r} value={r} className="text-gray-900">{r}</option>)}
+                            </select>
+                          ) : (
+                            getRestrictionBadge(listing.restriction || 'Clear View')
+                          )}
+                        </td>
+
+                        {/* Qty */}
+                        <td className="py-3 px-4 text-center text-white font-semibold">
+                          {editingId === listing._id ? (
+                            <input
+                              type="number"
+                              value={editForm.quantity}
+                              onChange={(e) => handleEditChange('quantity', parseInt(e.target.value) || 1)}
+                              className="w-16 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-center focus:ring-1 focus:ring-blue-500"
+                              min={1}
+                            />
+                          ) : (
+                            <span>{listing.quantity}</span>
+                          )}
+                        </td>
+
+                        {/* Price */}
+                        <td className="py-3 px-4 text-right text-white font-semibold">
+                          {editingId === listing._id ? (
+                            <input
+                              type="number"
+                              value={editForm.price}
+                              onChange={(e) => handleEditChange('price', parseFloat(e.target.value) || 0)}
+                              className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right focus:ring-1 focus:ring-blue-500"
+                              min={0}
+                              step="0.01"
+                            />
+                          ) : (
+                            <span className="text-yellow-300">{listing.price} pts</span>
+                          )}
+                        </td>
+
+                        {/* Split */}
+                        <td className="py-3 px-4 text-blue-200 text-xs">
+                          {listing.splitType || '—'}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3 px-4">
+                          {getStatusBadge(listing.status)}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {editingId === listing._id ? (
+                              <>
+                                <button
+                                  onClick={() => saveEdit(listing._id)}
+                                  disabled={saveLoading}
+                                  className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded transition-colors disabled:opacity-50"
+                                  title="Save"
+                                >
+                                  {saveLoading
+                                    ? <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-400" />
+                                    : <FaCheck size={13} />}
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  disabled={saveLoading}
+                                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors disabled:opacity-50"
+                                  title="Cancel"
+                                >
+                                  <FaTimes size={13} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => startEdit(listing)}
+                                  className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={13} />
+                                </button>
+                                <button
+                                  onClick={() => duplicateListing(listing)}
+                                  className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded transition-colors"
+                                  title="Duplicate"
+                                >
+                                  <FaCopy size={13} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(listing._id)}
+                                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={13} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

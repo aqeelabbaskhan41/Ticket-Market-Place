@@ -334,7 +334,7 @@ export default function CompetitionsManagement() {
                   <div>
                     <h3 className="font-semibold text-white">{competition.name}</h3>
                     <p className="text-blue-200 text-sm">
-                      Created {new Date(competition.createdAt).toLocaleDateString()}
+                      Created {(() => { const d = new Date(competition.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                     </p>
                   </div>
                 </div>

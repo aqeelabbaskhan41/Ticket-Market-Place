@@ -195,20 +195,18 @@ export default function MyTickets() {
 
   const formatMatchDate = (dateString) => {
     if (!dateString) return 'Date not available';
-    
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const weekday = date.toLocaleDateString('en-GB', { weekday: 'short' });
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-GB', { month: 'short' });
+    const year = date.getFullYear();
+    return `${weekday}, ${day}/${month}/${year}`;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-GB');
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.toLocaleDateString('en-GB',{month:'short'})}/${date.getFullYear()}`;
   };
 
   const getImageUrl = (imagePath) => {

@@ -493,12 +493,7 @@ export default function MatchTickets() {
                 {day} {month} {time && `at ${time}`}
               </p>
               <div className="text-blue-300 text-xs mt-1">
-                {new Date(match.date).toLocaleDateString('en-GB', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
+                {new Date(match.date).toLocaleDateString('en-GB', { weekday: 'long' })}, {new Date(match.date).getDate()}/{new Date(match.date).toLocaleDateString('en-GB',{month:'long'})}/{new Date(match.date).getFullYear()}
               </div>
             </div>
           </div>
@@ -1461,14 +1456,7 @@ const EnhancedPurchaseConfirmationModal = ({
                     <div>
                       <p className="text-blue-300 text-xs">Date & Time</p>
                       <p className="text-white font-medium">
-                        {new Date(match.date).toLocaleDateString('en-GB', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {new Date(match.date).toLocaleDateString('en-GB',{weekday:'short'})}, {new Date(match.date).getDate()}/{new Date(match.date).toLocaleDateString('en-GB',{month:'short'})}/{new Date(match.date).getFullYear()}
                       </p>
                     </div>
                   </div>
