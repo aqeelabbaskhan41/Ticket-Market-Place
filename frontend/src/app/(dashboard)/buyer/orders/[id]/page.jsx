@@ -159,7 +159,29 @@ export default function OrderDetails() {
                 </div>
               </div>
             )}
-             {/* Handle iOS/Android specific links similarly if needed */}
+            {deliveryDetails.mobileLinks?.ios && (
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                <p className="text-xs text-blue-300 mb-1">iOS Link</p>
+                <div className="flex gap-2">
+                  <input readOnly value={deliveryDetails.mobileLinks.ios} className="bg-black/20 text-white text-sm flex-1 px-3 py-2 rounded border border-white/5" />
+                  <a href={deliveryDetails.mobileLinks.ios} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm flex items-center">Open</a>
+                </div>
+              </div>
+            )}
+            {deliveryDetails.mobileLinks?.android && (
+              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                <p className="text-xs text-blue-300 mb-1">Android Link</p>
+                <div className="flex gap-2">
+                  <input readOnly value={deliveryDetails.mobileLinks.android} className="bg-black/20 text-white text-sm flex-1 px-3 py-2 rounded border border-white/5" />
+                  <a href={deliveryDetails.mobileLinks.android} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm flex items-center">Open</a>
+                </div>
+              </div>
+            )}
+            {!deliveryDetails.mobileLinks?.general && !deliveryDetails.mobileLinks?.ios && !deliveryDetails.mobileLinks?.android && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg text-yellow-200 text-sm">
+                No mobile links have been provided yet.
+              </div>
+            )}
           </div>
         );
 
@@ -241,7 +263,7 @@ export default function OrderDetails() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{ticket.match}</h1>
             <div className="flex flex-wrap gap-4 text-blue-200">
-              <span className="flex items-center gap-2"><FaCalendar /> {new Date(ticket.matchDate).toLocaleDateString()}</span>
+              <span className="flex items-center gap-2"><FaCalendar /> {(() => { const d = new Date(ticket.matchDate); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}</span>
               <span className="flex items-center gap-2"><FaMapMarkerAlt /> {ticket.venue}</span>
             </div>
           </div>

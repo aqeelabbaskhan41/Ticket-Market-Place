@@ -201,13 +201,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-GB', { month: 'short' });
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return 'N/A';
+    }
   };
 
   if (loading) {

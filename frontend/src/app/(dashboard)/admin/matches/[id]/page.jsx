@@ -172,12 +172,7 @@ export default function AdminMatchDetailPage() {
     const month = date.toLocaleDateString('en-GB', { month: 'short' });
     const time = timeString ? timeString.substring(0, 5) : '';
     
-    const fullDate = date.toLocaleDateString('en-GB', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const fullDate = (() => { const d = date; const weekday = d.toLocaleDateString('en-GB',{weekday:'long'}); const day = d.getDate(); const month = d.toLocaleDateString('en-GB',{month:'long'}); const year = d.getFullYear(); return `${weekday}, ${day}/${month}/${year}`; })();
     
     return { day, month, time, fullDate };
   };
@@ -199,6 +194,40 @@ export default function AdminMatchDetailPage() {
       router.push('/admin/matches');
     } catch (err) {
       alert('Error deleting match: ' + err.message);
+    }
+  };
+
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/buyer/matches/${id}/tickets`;
+    const shareData = {
+      title: match ? `${match.homeTeam} vs ${match.awayTeam}` : 'Match',
+      text: match
+        ? `${match.homeTeam} vs ${match.awayTeam} — ${match.competition} | Get your tickets now!`
+        : 'Check out this match!',
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      }
+    } catch (err) {
+      // User cancelled or clipboard failed — fall back silently
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          setShareCopied(true);
+          setTimeout(() => setShareCopied(false), 2500);
+        } catch {
+          alert(`Share link: ${shareUrl}`);
+        }
+      }
     }
   };
 
@@ -474,46 +503,23 @@ export default function AdminMatchDetailPage() {
           />
           <StatCard 
             label="Avg. Price"
-            value={`${Math.round(((match.minPrice || 0) + (match.maxPrice || 0)) / 2) || 0} pts`}
+            value={
+              match.totalListings
+                ? `${Math.round(((match.minPrice || 0) + (match.maxPrice || 0)) / 2)} pts`
+                : '—'
+            }
             icon={<FaMoneyBillWave className="text-yellow-400" />}
             color="yellow"
           />
           <StatCard 
             label="Price Range"
-            value={`${match.minPrice || 0} - ${match.maxPrice || 0} pts`}
+            value={
+              match.totalListings
+                ? `${match.minPrice || 0} – ${match.maxPrice || 0} pts`
+                : '—'
+            }
             icon={<FaTag className="text-purple-400" />}
             color="purple"
-          />
-        </div>
-      </div>
-
-      {/* Additional Stats */}
-      <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-4 sm:p-6 border border-white/20 mb-6 sm:mb-8">
-        <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Additional Statistics</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard 
-            label="Total Views"
-            value={match.views || 0}
-            color="blue"
-            small={true}
-          />
-          <StatCard 
-            label="Success Rate"
-            value={`${match.successRate || 0}%`}
-            color="green"
-            small={true}
-          />
-          <StatCard 
-            label="Days Until"
-            value={match.daysUntil || 'N/A'}
-            color="purple"
-            small={true}
-          />
-          <StatCard 
-            label="Created"
-            value={match.createdAt ? new Date(match.createdAt).toLocaleDateString() : 'N/A'}
-            color="yellow"
-            small={true}
           />
         </div>
       </div>
@@ -537,11 +543,11 @@ export default function AdminMatchDetailPage() {
             Edit Match
           </button>
           <button 
-            onClick={() => alert('Share functionality coming soon!')}
+            onClick={handleShare}
             className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 text-purple-300 hover:text-purple-200 py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
           >
             <FaShare className="group-hover:scale-110 transition-transform" />
-            Share Match
+            {shareCopied ? 'Link Copied!' : 'Share Match'}
           </button>
           <button 
             onClick={handleDelete}

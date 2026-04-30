@@ -531,9 +531,7 @@ export default function VenuesManagement() {
                                   src={`${API_BASE_URL.replace('/api', '')}${section.image}`} 
                                   alt={section.name}
                                   className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.src = '/placeholder-image.jpg';
-                                  }}
+                                  onError={(e) => { e.target.style.display = 'none'; }}
                                 />
                               </div>
                             </div>
@@ -686,7 +684,7 @@ export default function VenuesManagement() {
                         </span>
                       </div>
                       <p className="text-blue-200 text-sm mb-3">
-                        Created {new Date(venue.createdAt).toLocaleDateString()}
+                        Created {(() => { const d = new Date(venue.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                       </p>
                       
                       {/* Sections Preview */}
@@ -703,9 +701,7 @@ export default function VenuesManagement() {
                                       src={`${API_BASE_URL.replace('/api', '')}${section.image}`} 
                                       alt={section.name}
                                       className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.target.src = '/placeholder-image.jpg';
-                                      }}
+                                      onError={(e) => { e.target.style.display = 'none'; }}
                                     />
                                   </div>
                                 )}
@@ -731,7 +727,7 @@ export default function VenuesManagement() {
                         <FaEdit />
                       </button>
                       <button
-                        onClick={() => deleteSection(venue._id)}
+                        onClick={() => handleDelete(venue._id)}
                         className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200"
                         title="Delete venue"
                       >
@@ -791,7 +787,7 @@ export default function VenuesManagement() {
               </button>
             </div>
 
-            <form onSubmit={addCategory} className="flex gap-2 mb-6">
+            <form onSubmit={saveCategory} className="flex gap-2 mb-6">
               <input
                 type="text"
                 value={categoryForm.name}
@@ -888,9 +884,9 @@ function SectionModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 max-w-md w-full animate-in fade-in-90 zoom-in-90">
+      <div className="bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 max-w-md w-full flex flex-col" style={{ maxHeight: '90vh' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/20">
+        <div className="flex items-center justify-between p-6 border-b border-white/20 flex-shrink-0">
           <h3 className="text-xl font-bold text-white">
             {sectionForm.name ? 'Edit Section' : 'Add New Section'} - {venue.name}
           </h3>
@@ -903,7 +899,7 @@ function SectionModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {error && (
             <div className="bg-red-500/20 border border-red-400/30 text-red-300 px-4 py-3 rounded-lg text-sm mb-4">
               {error}
@@ -943,7 +939,7 @@ function SectionModal({
               {imagePreview ? (
                 <div className="mb-3">
                   <p className="text-blue-300 text-xs mb-2">Preview:</p>
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/20">
+                  <div className="relative w-full h-36 rounded-lg overflow-hidden border border-white/20">
                     <img 
                       src={imagePreview} 
                       alt="Section preview" 

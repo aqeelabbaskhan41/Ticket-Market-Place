@@ -8,6 +8,31 @@ import {
   FaInfoCircle, FaChevronRight
 } from 'react-icons/fa';
 
+// Defined outside BecomeSellerModal so React sees a stable component reference
+// across renders. Defining it inside would cause React to unmount/remount the
+// input on every render (losing focus after each keystroke).
+const Field = ({ id, label, icon, type = 'text', placeholder = '', required = false, value, onChange }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm text-blue-200 mb-1.5">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-300 text-sm pointer-events-none">
+        {icon}
+      </span>
+      <input
+        id={id}
+        type={type}
+        required={required}
+        value={value}
+        onChange={onChange}
+        className="w-full pl-10 pr-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm outline-none"
+        placeholder={placeholder}
+      />
+    </div>
+  </div>
+);
+
 export default function BecomeSellerModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     businessName: '',
@@ -65,28 +90,6 @@ export default function BecomeSellerModal({ onClose, onSuccess }) {
       setLoading(false);
     }
   };
-
-  const Field = ({ id, label, icon, type = 'text', placeholder = '', required = false }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm text-blue-200 mb-1.5">
-        {label} {required && <span className="text-red-400">*</span>}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-300 text-sm pointer-events-none">
-          {icon}
-        </span>
-        <input
-          id={id}
-          type={type}
-          required={required}
-          value={formData[id]}
-          onChange={(e) => setFormData({ ...formData, [id]: e.target.value })}
-          className="w-full pl-10 pr-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm outline-none"
-          placeholder={placeholder}
-        />
-      </div>
-    </div>
-  );
 
   const modal = (
     <div
@@ -150,8 +153,8 @@ export default function BecomeSellerModal({ onClose, onSuccess }) {
 
           {/* Business fields */}
           <div className="space-y-3">
-            <Field id="businessName" label="Business Name" icon={<FaBuilding />} placeholder="Your business or brand name" required />
-            <Field id="phone" label="Contact Phone" icon={<FaPhone />} type="tel" placeholder="Business phone number" />
+            <Field id="businessName" label="Business Name" icon={<FaBuilding />} placeholder="Your business or brand name" required value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
+            <Field id="phone" label="Contact Phone" icon={<FaPhone />} type="tel" placeholder="Business phone number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
           </div>
 
           {/* Bank details divider */}
@@ -164,9 +167,9 @@ export default function BecomeSellerModal({ onClose, onSuccess }) {
           </div>
 
           <div className="space-y-3">
-            <Field id="bankName" label="Bank Name" icon={<FaUniversity />} placeholder="e.g. Chase, Wells Fargo" />
-            <Field id="accountNumber" label="Account Number" icon={<FaCreditCard />} placeholder="Your bank account number" />
-            <Field id="accountHolder" label="Account Holder Name" icon={<FaUser />} placeholder="Name on the account" />
+            <Field id="bankName" label="Bank Name" icon={<FaUniversity />} placeholder="e.g. Chase, Wells Fargo" value={formData.bankName} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} />
+            <Field id="accountNumber" label="Account Number" icon={<FaCreditCard />} placeholder="Your bank account number" value={formData.accountNumber} onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })} />
+            <Field id="accountHolder" label="Account Holder Name" icon={<FaUser />} placeholder="Name on the account" value={formData.accountHolder} onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value })} />
           </div>
         </div>
 

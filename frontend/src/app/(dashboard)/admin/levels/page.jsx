@@ -689,7 +689,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                 {/* Joined Date */}
                 <div className="mt-3 pt-3 border-t border-gray-700">
                   <p className="text-gray-500 text-xs">
-                    Joined: {new Date(user.createdAt).toLocaleDateString()}
+                    Joined: {(() => { const d = new Date(user.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                   </p>
                 </div>
               </div>
