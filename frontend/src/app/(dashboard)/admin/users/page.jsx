@@ -424,7 +424,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                     {user.profile?.phone || "N/A"}
                   </td>
                   <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-blue-200">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {(() => { const d = new Date(user.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                   </td>
                 </tr>
               ))}

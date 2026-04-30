@@ -233,7 +233,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
                           <FaClock className="mr-2 sm:mr-3 text-blue-400 flex-shrink-0" />
                           <span>
                             Applied {daysPending} day{daysPending !== 1 ? 's' : ''} ago • 
-                            {' '}{new Date(user.createdAt).toLocaleDateString()}
+                            {' '}{(() => { const d = new Date(user.createdAt); return `${d.getDate()}/${d.toLocaleDateString('en-GB',{month:'short'})}/${d.getFullYear()}`; })()}
                           </span>
                         </div>
                       </div>
